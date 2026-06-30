@@ -1,48 +1,56 @@
-# CP Memory
+<p align="center">
+  <img src="assets/logo.png" width="140" alt="CP Memory logo">
+</p>
 
-[中文](README.md) | English
+<h1 align="center">CP Memory</h1>
 
-CP Memory is a local-first memory plugin for Codex. It stores facts, conversation summaries, personal memories, decisions, checkpoints, and audit links in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
+<p align="center">
+  A local-first memory plugin for Codex that remembers important context and keeps it reviewable, explainable, and correctable.
+</p>
 
-The goal is not to build a large platform. CP Memory is meant to be a personal assistant memory system that can follow long-running work: local, explainable, reviewable, and correctable.
+<p align="center">
+  <a href="README.md">中文</a> | English
+</p>
 
-## Features
+---
 
-- Local SQLite storage under `~/.cp-memory/memory.db` by default.
-- Codex plugin metadata, skills, lifecycle hooks, and MCP server support.
-- Six personal-memory models: profile, preference, relationship, ongoing, episode, and belief decision.
-- Conservative automatic extraction from completed turns.
-- Review, conflict detection, correction history, and governance reports.
-- Optional weekly maintenance automation for health checks and cleanup previews.
+CP Memory is a local-first personal memory plugin for Codex. It stores facts, conversation summaries, personal preferences, relationships, ongoing work, decisions, and checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
 
-## Requirements
+It is not trying to be a large memory platform. It is a memory layer for long-running personal assistant work: local, explainable, reviewable, and correctable.
 
-- Codex with plugin support.
-- Python 3.10 or newer.
-- Windows PowerShell if you use the bundled installer.
+## Highlights
 
-## Install From GitHub
+- Local-first: data is stored under `~/.cp-memory/memory.db` by default.
+- Plugin-native: supports Codex plugin metadata, MCP server, skills, and lifecycle hooks.
+- Personal memory: supports profile, preference, relationship, ongoing, episode, and belief decision models.
+- Governable: includes conflict detection, correction history, review queues, and governance reports.
+- Conservative extraction: extracts long-term memory only from explicit signals, avoiding implementation-note noise.
+- Cross-platform install: GitHub marketplace installation works through Codex plugin support on Windows, macOS, and Linux.
+
+## Install
+
+The recommended path is GitHub marketplace installation:
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
 codex plugin add cp-memory@cp-memory
 ```
 
-Restart Codex after installation. Open the hooks view and trust the CP Memory lifecycle hooks if Codex asks.
+Restart Codex after installation. If Codex asks you to trust hooks, approve the CP Memory lifecycle hooks in the hooks view.
 
-## Local Install
+## Local Development Install
 
-From a local checkout:
+Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-The installer registers the plugin in your personal marketplace, refreshes the local plugin cache, enables the plugin, provisions the weekly maintenance automation, and removes legacy global hook wiring if present.
+The script is currently Windows-first. GitHub marketplace installation does not depend on it.
 
 ## Configuration
 
-By default, CP Memory stores data in:
+Default data path:
 
 ```text
 ~/.cp-memory/memory.db
@@ -57,7 +65,7 @@ CP_MEMORY_PLUGIN_HOME
 CP_MEMORY_OLD_HOME
 ```
 
-## Safety Notes
+## Safety
 
 CP Memory stores local assistant memory. Do not commit your real `memory.db`, logs, private summaries, or environment files. The included `.gitignore` excludes common local database, cache, and environment files.
 
