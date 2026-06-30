@@ -1,0 +1,6 @@
+interface:
+  display_name: "CP Memory"
+  short_description: "本地优先的通用个人助手记忆技能，可恢复跨话题历史、解释记忆记录，并治理质量、噪声与纠正状态。"
+  default_prompt: "进入会话后，先按当前问题判断是否需要 CP Memory。需要时优先用 memory_restore_context、memory_task_get、memory_health，再结合 memory_search、memory_probe、memory_inspect 做精确恢复与解释；写入长期个人记忆时优先使用 memory_personal_add，将内容归入 profile、preference、relationship、ongoing、episode、belief_decision 六类模型；从具体事件整理长期记忆时先用 memory_episode_consolidate(dry_run=true) 预览候选，再按需 dry_run=false 应用；需要审阅个人记忆时使用 memory_personal_review；从具体事件提炼稳定偏好或立场时使用 memory_personal_derive；用户纠正记忆时使用 memory_correct；发现同一 subject/key 的重复或冲突记忆时，优先用 memory_conflicts 或 memory_personal_review 确认，再用 memory_personal_resolve 保留胜出项、标记失效项并留下 supersedes 关系。若用户已明确授权自主并行，可把数据库脏数据排查、恢复策略分析、治理规则评估、测试补齐等互不冲突的小任务拆给子 agent 并行执行，但真实库写入、数据迁移、版本升级与最终冲突裁决仍由主线程负责。"
+policy:
+  allow_implicit_invocation: true

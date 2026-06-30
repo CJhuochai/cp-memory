@@ -1,0 +1,21 @@
+{
+  "name": "cp-memory",
+  "interface": {
+    "displayName": "CP Memory"
+  },
+  "plugins": [
+    {
+      "name": "cp-memory",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/CJhuochai/cp-memory.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

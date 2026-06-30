@@ -1,0 +1,13 @@
+version = 1
+id = "{{AUTOMATION_ID}}"
+kind = "cron"
+name = "{{AUTOMATION_NAME}}"
+prompt = {{AUTOMATION_PROMPT}}
+status = "{{AUTOMATION_STATUS}}"
+rrule = "{{AUTOMATION_RRULE}}"
+model = "{{AUTOMATION_MODEL}}"
+reasoning_effort = "{{AUTOMATION_REASONING_EFFORT}}"
+execution_environment = "{{AUTOMATION_EXECUTION_ENVIRONMENT}}"
+cwds = [{{AUTOMATION_CWD}}]
+created_at = {{AUTOMATION_CREATED_AT}}
+updated_at = {{AUTOMATION_UPDATED_AT}}

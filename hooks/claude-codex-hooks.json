@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py\"; exit 0",
+            "commandWindows": "if (Get-Command python -ErrorAction SilentlyContinue) { python \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\session_start.py\" } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\session_start.py\" }",
+            "statusMessage": "Loading memory context"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/user_prompt_submit.py\"; exit 0",
+            "commandWindows": "if (Get-Command python -ErrorAction SilentlyContinue) { python \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\user_prompt_submit.py\" } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\user_prompt_submit.py\" }",
+            "statusMessage": "Retrieving CP Memory context"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/pre_compact.py\"; exit 0",
+            "commandWindows": "if (Get-Command python -ErrorAction SilentlyContinue) { python \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre_compact.py\" } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\pre_compact.py\" }",
+            "statusMessage": "Saving conversation checkpoint"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/stop.py\"; exit 0",
+            "commandWindows": "if (Get-Command python -ErrorAction SilentlyContinue) { python \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\stop.py\" } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\stop.py\" }",
+            "statusMessage": "Saving CP Memory turn summary"
+          }
+        ]
+      }
+    ]
+  }
+}
