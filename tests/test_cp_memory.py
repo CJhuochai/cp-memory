@@ -14,6 +14,7 @@ SCRIPTS_DIR = PLUGIN_HOME / "scripts"
 HOOKS_DIR = PLUGIN_HOME / "hooks"
 PLUGIN_MANIFEST = PLUGIN_HOME / ".codex-plugin" / "plugin.json"
 INSTALL_SCRIPT = PLUGIN_HOME / "install.ps1"
+INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.ps1"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
 
@@ -86,6 +87,7 @@ class CpMemoryTests(unittest.TestCase):
         self.assertEqual(plugin["name"], "cp-memory")
         self.assertEqual(plugin["source"]["source"], "url")
         self.assertIn("github.com", plugin["source"]["url"])
+        self.assertTrue(INSTALL_TEST_SCRIPT.exists())
 
     def test_install_keeps_global_hooks_config_untouched_and_does_not_copy_hook_scripts(self):
         temp_profile = Path(tempfile.mkdtemp(prefix="cp-memory-install-"))

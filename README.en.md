@@ -79,6 +79,12 @@ Run the test suite:
 python -m unittest discover -s tests -p test_cp_memory.py
 ```
 
+Validate the installer in an isolated temporary profile without touching your real Codex configuration:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
+```
+
 Run the broader benchmark-style check:
 
 ```powershell
