@@ -864,6 +864,7 @@ class CpMemoryTests(unittest.TestCase):
             source="stop-hook-auto-extract",
             evidence_count=1,
             stability_score=50,
+            scope="global",
         )
         self.store.upsert_personal_memory(
             conn,
@@ -888,6 +889,7 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("## 待确认 / Needs Review", digest)
         self.assertIn("## 冲突和过期 / Conflicts And Stale Candidates", digest)
         self.assertIn("用户喜欢中文结论先行", digest)
+        self.assertIn("scope=`global`", digest)
         self.assertIn("review_or_confirm", digest)
         self.assertIn("personal_possible_contradiction", digest)
         self.assertIn("personal_expired_ongoing", digest)
@@ -1009,6 +1011,90 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("用户喜欢中文说明。", context)
         self.assertNotIn("英文说明", context)
         self.assertNotIn("不喜欢中文说明", context)
+
+    def test_personal_memory_scope_is_preserved_on_update(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        rid, _, _ = self.store.upsert_personal_memory(
+            conn,
+            "belief_decision",
+            "user",
+            "release_rule",
+            "CP Memory 发版先开分支。",
+            scope="project:cp-memory",
+        )
+        self.store.upsert_personal_memory(
+            conn,
+            "belief_decision",
+            "user",
+            "release_rule",
+            "CP Memory 发版先开分支并通过 PR 合并。",
+        )
+        scope = conn.execute("SELECT scope FROM memory_meta WHERE fact_id=?", (rid,)).fetchone()["scope"]
+        conn.close()
+
+        self.assertEqual(scope, "project:cp-memory")
+
+    def test_restore_context_prioritizes_matching_scope_without_filtering_global(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(
+            conn,
+            "belief_decision",
+            "user",
+            "basis_release",
+            "BasisProject 发布规则使用内部环境流程。",
+            scope="workspace:E:\\BasisProject",
+        )
+        self.store.upsert_personal_memory(
+            conn,
+            "belief_decision",
+            "user",
+            "cp_release",
+            "CP Memory 发布规则是先开分支、测试、PR 合并。",
+            scope="project:cp-memory",
+        )
+        self.store.upsert_personal_memory(
+            conn,
+            "preference",
+            "user",
+            "communication_style",
+            "用户喜欢中文结论先行。",
+            scope="global",
+        )
+        context = self.store.build_restore_context(conn, prompt="CP Memory 的发布规则是什么？", max_chars=2200)
+        conn.close()
+
+        self.assertIn("CP Memory 发布规则", context)
+        self.assertIn("用户喜欢中文结论先行", context)
+        self.assertLess(context.index("CP Memory 发布规则"), context.index("BasisProject 发布规则"))
+
+    def test_stop_hook_auto_extract_writes_project_scope(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "记住一下，CP Memory 发版以后要先开分支、测试、PR 合并。",
+                "assistant_message": "收到，这是 CP Memory 项目的发布规则，我会在后续维护这个插件时优先遵守。后续涉及版本发布、Release、tag 和 PR 合并时，都会按这个项目规则处理。",
+            },
+            ensure_ascii=False,
+        )
+        subprocess.run(
+            [sys.executable, str(HOOKS_DIR / "stop.py")],
+            input=payload,
+            text=True,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        scope = conn.execute(
+            "SELECT m.scope FROM facts f JOIN memory_meta m ON m.fact_id=f.id WHERE f.category='belief_decision' ORDER BY f.updated_at DESC LIMIT 1"
+        ).fetchone()["scope"]
+        conn.close()
+
+        self.assertEqual(scope, "project:cp-memory")
 
     def test_auto_extract_review_candidates_and_confirmed_priority(self):
         conn = self.store.get_db()
