@@ -73,6 +73,10 @@ Restart Codex after installation. If Codex asks you to trust hooks, approve the 
 
 If you have seen other memory projects, start with [docs/comparison.md](docs/comparison.md). CP Memory's main difference is Codex lifecycle integration plus memory governance, not just storage and search.
 
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for future directions. The roadmap prioritizes local-first behavior, explainability, correctability, and privacy safety.
+
 ## Local Development
 
 Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
