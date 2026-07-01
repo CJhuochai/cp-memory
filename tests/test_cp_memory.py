@@ -402,6 +402,103 @@ class CpMemoryTests(unittest.TestCase):
 
         self.assertEqual(count, 0)
 
+    def test_stop_hook_extracts_rule_signals_with_explanation(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "以后不要再直接改 main，先开分支开发，测试通过后再 PR 合并。",
+                "assistant_message": "收到，后续我会遵守这个发布和开发规则。这个规则会用于后续维护 CP Memory：先开分支、完成验证、再通过 PR 合并。",
+            },
+            ensure_ascii=False,
+        )
+        subprocess.run(
+            [sys.executable, str(HOOKS_DIR / "stop.py")],
+            input=payload,
+            text=True,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        row = conn.execute(
+            """
+            SELECT f.value, f.confidence, p.content
+            FROM facts f
+            JOIN memory_payloads p ON p.fact_id = f.id
+            WHERE f.category='belief_decision'
+            ORDER BY f.updated_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+        conn.close()
+
+        self.assertIsNotNone(row)
+        self.assertIn("不要再直接改 main", row["value"])
+        self.assertEqual(row["confidence"], "high")
+        payload_content = json.loads(row["content"])
+        nested = payload_content["payload"]
+        self.assertEqual(nested["extraction_rule"], "stable_decision")
+        self.assertIn("不要再", nested["matched_signals"])
+        self.assertIn("以后", nested["matched_intents"])
+        self.assertFalse(nested["needs_review"])
+
+    def test_stop_hook_skips_example_rule_text(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "下面只是一个测试用例：以后不要再直接改 main，先开分支开发。",
+                "assistant_message": "这是示例文本，不应该沉淀成用户长期规则。即使文本里包含以后、分支、测试、PR 等词，也只是测试用例。",
+            },
+            ensure_ascii=False,
+        )
+        subprocess.run(
+            [sys.executable, str(HOOKS_DIR / "stop.py")],
+            input=payload,
+            text=True,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        count = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM facts WHERE category IN ('profile','preference','relationship','ongoing','belief_decision')"
+        ).fetchone()["cnt"]
+        conn.close()
+
+        self.assertEqual(count, 0)
+
+    def test_stop_hook_keeps_real_preference_about_examples(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "记住一下，我喜欢用具体示例解释复杂问题，最好先给结论再给例子。",
+                "assistant_message": "收到，我会记住这个沟通偏好：解释复杂问题时优先给结论，并配合具体示例说明。后续遇到复杂设计、测试或发布流程，我会按这个方式表达。",
+            },
+            ensure_ascii=False,
+        )
+        subprocess.run(
+            [sys.executable, str(HOOKS_DIR / "stop.py")],
+            input=payload,
+            text=True,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        row = conn.execute(
+            "SELECT value FROM facts WHERE category='preference' ORDER BY updated_at DESC LIMIT 1"
+        ).fetchone()
+        conn.close()
+
+        self.assertIsNotNone(row)
+        self.assertIn("具体示例", row["value"])
+
     def test_user_prompt_submit_skips_irrelevant_prompt(self):
         env = self.hook_env()
         result = subprocess.run(

@@ -20,7 +20,7 @@ CASES = [
         "key": "timezone",
         "value": "用户默认使用东八区 Asia/Shanghai。",
         "prompt": "你记得我的默认时区吗？",
-        "expected": ["profile", "东八区"],
+        "expected": ["Identity", "东八区"],
     },
     {
         "name": "preference_style",
@@ -28,7 +28,7 @@ CASES = [
         "key": "communication_style",
         "value": "用户喜欢中文、结论先行、直接给可执行建议。",
         "prompt": "你记得我喜欢什么沟通方式吗？",
-        "expected": ["preference", "结论先行"],
+        "expected": ["Preferences", "结论先行"],
     },
     {
         "name": "relationship_memory_system",
@@ -36,7 +36,7 @@ CASES = [
         "key": "cp_memory",
         "value": "用户把 CP Memory 当作通用个人助手记忆系统。",
         "prompt": "我和 CP Memory 的关系是什么？",
-        "expected": ["relationship", "通用个人助手"],
+        "expected": ["Relationships", "通用个人助手"],
     },
     {
         "name": "ongoing_goal",
@@ -44,7 +44,7 @@ CASES = [
         "key": "memory_goal",
         "value": "用户正在把 CP Memory 升级为本地优先的个人助手记忆系统。",
         "prompt": "我最近在推进什么目标？",
-        "expected": ["ongoing", "本地优先"],
+        "expected": ["Ongoing", "本地优先"],
     },
     {
         "name": "belief_direction",
@@ -52,7 +52,7 @@ CASES = [
         "key": "product_direction",
         "value": "CP Memory 不做大平台，优先成为本地优先、强解释、低运维的个人助手。",
         "prompt": "这个记忆系统的长期方向是什么？",
-        "expected": ["belief_decision", "不做大平台"],
+        "expected": ["Rules And Decisions", "不做大平台"],
     },
 ]
 
@@ -110,8 +110,8 @@ def main():
         results.append(
             {
                 "name": "episode_derived_belief",
-                "passed": "不限定编程" in episode_context and "belief_decision" in episode_context,
-                "expected": ["不限定编程", "belief_decision"],
+                "passed": "不限定编程" in episode_context and "Rules And Decisions" in episode_context,
+                "expected": ["不限定编程", "Rules And Decisions"],
             }
         )
         history_context = store.build_restore_context(conn, prompt="你还记得我那次澄清它不能只服务编程吗？", max_chars=2200)

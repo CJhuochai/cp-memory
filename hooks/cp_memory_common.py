@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -233,6 +234,8 @@ def is_explicit_memory_sentence(sentence):
     )
     if any(term in text for term in trigger_terms):
         return True
+    if explicit_memory_intents(text):
+        return True
     first_person_terms = ("我喜欢", "我不喜欢", "我想", "我要", "我希望", "我正在", "我最近在", "我还在", "我先做", "我先", "我后面", "我准备", "我打算", "我是", "我叫")
     return text.startswith(first_person_terms)
 
@@ -256,6 +259,99 @@ def looks_like_meta_explanation(sentence):
         "插件",
     )
     return len(text) > 120 or any(marker.lower() in text.lower() for marker in noisy_markers)
+
+
+@dataclass(frozen=True)
+class ExtractionRule:
+    name: str
+    category: str
+    signals: tuple
+    stability_score: int
+    required_intents: tuple = ()
+    negative_signals: tuple = ()
+
+
+EXPLICIT_MEMORY_INTENTS = (
+    "记住",
+    "以后",
+    "后续",
+    "下次",
+    "默认",
+    "规则",
+    "原则",
+    "必须",
+    "一定要",
+    "不要再",
+    "别再",
+    "不能",
+    "统一",
+    "一律",
+    "优先",
+    "作为",
+    "定下来",
+    "先做",
+    "待处理",
+    "先放一放",
+)
+
+GLOBAL_NEGATIVE_SIGNALS = (
+    "比如",
+    "例如",
+    "假设",
+    "如果用户",
+    "测试用例",
+    "代码示例",
+    "只是示例",
+    "示例文本",
+    "输出如下",
+    "报错",
+    "Traceback",
+)
+
+EXTRACTION_RULES = (
+    ExtractionRule("profile_identity", CATEGORY_PROFILE, ("时区", "东八区", "Asia/Shanghai", "昵称", "我是", "我叫", "用户默认", "用户时区"), 88),
+    ExtractionRule("communication_preference", CATEGORY_PREFERENCE, ("喜欢", "不喜欢", "偏好", "习惯", "结论先行", "中文说明", "用户希望", "我希望"), 78),
+    ExtractionRule("relationship", CATEGORY_RELATIONSHIP, ("当作", "关系", "和 CP Memory", "把 CP Memory"), 72),
+    ExtractionRule("ongoing_work", CATEGORY_ONGOING, ("正在", "最近在", "目标", "计划", "推进", "本周优先", "继续", "先做", "后面再说", "先放一放", "这轮先", "当前在做", "还没做完", "待处理"), 62),
+    ExtractionRule("stable_decision", CATEGORY_BELIEF_DECISION, ("决定", "不做", "不是", "而是", "原则", "长期方向", "通用个人助手", "不限定编程", "必须", "不要再", "不能", "默认", "一律", "统一", "先开分支", "PR"), 86),
+)
+
+
+def matched_terms(text, terms):
+    return [term for term in terms if term and term in text]
+
+
+def extraction_noise_reasons(text):
+    reasons = []
+    if looks_like_meta_explanation(text):
+        reasons.append("meta_explanation")
+    reasons.extend(f"negative:{term}" for term in matched_terms(text, GLOBAL_NEGATIVE_SIGNALS))
+    return reasons
+
+
+def explicit_memory_intents(text):
+    return matched_terms(text, EXPLICIT_MEMORY_INTENTS)
+
+
+def evaluate_extraction_rule(rule, text):
+    signals = matched_terms(text, rule.signals)
+    if not signals:
+        return None
+    intents = explicit_memory_intents(text)
+    required = matched_terms(text, rule.required_intents)
+    if rule.required_intents and not required:
+        return None
+    negatives = extraction_noise_reasons(text) + [f"rule_negative:{term}" for term in matched_terms(text, rule.negative_signals)]
+    if negatives:
+        return None
+    confidence = "high" if (intents and len(signals) >= 2) or required else "medium"
+    return {
+        "rule": rule.name,
+        "signals": signals,
+        "intents": intents,
+        "confidence": confidence,
+        "reason": f"rule={rule.name}; signals={','.join(signals[:4])}; intents={','.join(intents[:4]) or 'none'}",
+    }
 
 
 def candidate_key_for(category, statement):
@@ -309,13 +405,6 @@ def decision_text_for(statement):
 
 
 def extract_personal_candidates(prompt, assistant):
-    rules = [
-        (CATEGORY_PROFILE, ("时区", "东八区", "Asia/Shanghai", "昵称", "我是", "我叫", "用户默认", "用户时区"), 88),
-        (CATEGORY_PREFERENCE, ("喜欢", "不喜欢", "偏好", "习惯", "结论先行", "中文说明", "用户希望"), 78),
-        (CATEGORY_RELATIONSHIP, ("当作", "关系", "和 CP Memory", "把 CP Memory"), 72),
-        (CATEGORY_ONGOING, ("正在", "最近在", "目标", "计划", "推进", "本周优先", "继续", "先做", "后面再说", "先放一放", "这轮先", "当前在做", "还没做完", "待处理"), 62),
-        (CATEGORY_BELIEF_DECISION, ("决定", "不做", "不是", "而是", "原则", "长期方向", "通用个人助手", "不限定编程"), 86),
-    ]
     candidates = []
     seen = set()
     for sentence in split_sentences(prompt) + split_sentences(assistant):
@@ -328,24 +417,30 @@ def extract_personal_candidates(prompt, assistant):
             else:
                 continue
         if not effective_text.startswith("用户"):
+            effective_text = f"用户要求{effective_text}"
+        if extraction_noise_reasons(normalized):
             continue
-        if looks_like_meta_explanation(normalized):
-            continue
-        for category, keywords, stability in rules:
-            if not any(keyword in effective_text for keyword in keywords):
+        for rule in EXTRACTION_RULES:
+            evaluation = evaluate_extraction_rule(rule, effective_text)
+            if not evaluation:
                 continue
-            key = candidate_key_for(category, effective_text)
-            dedupe_key = (category, key, effective_text)
+            key = candidate_key_for(rule.category, effective_text)
+            dedupe_key = (rule.category, key, effective_text)
             if dedupe_key in seen:
                 continue
             seen.add(dedupe_key)
             candidates.append(
                 {
-                    "memory_type": category,
+                    "memory_type": rule.category,
                     "key": key,
                     "value": effective_text[:220],
-                    "details": "Auto extracted from stop hook",
-                    "stability_score": stability,
+                    "details": f"Auto extracted from stop hook ({evaluation['reason']})",
+                    "stability_score": rule.stability_score,
+                    "confidence": evaluation["confidence"],
+                    "extraction_rule": evaluation["rule"],
+                    "matched_signals": evaluation["signals"],
+                    "matched_intents": evaluation["intents"],
+                    "needs_review": evaluation["confidence"] != "high",
                 }
             )
     return candidates[:6]
@@ -534,11 +629,20 @@ def persist_personal_signals(conn, prompt, assistant, summary_id=""):
             candidate["key"],
             candidate["value"],
             details=candidate["details"],
+            confidence=candidate.get("confidence", "medium"),
             tags=f"cp-memory,auto-extract,{candidate['memory_type']}",
             source="stop-hook-auto-extract",
             evidence_count=1,
             stability_score=candidate["stability_score"],
-            payload={"prompt": prompt, "assistant": assistant, "episode_id": episode_id},
+            payload={
+                "prompt": prompt,
+                "assistant": assistant,
+                "episode_id": episode_id,
+                "extraction_rule": candidate.get("extraction_rule", ""),
+                "matched_signals": candidate.get("matched_signals", []),
+                "matched_intents": candidate.get("matched_intents", []),
+                "needs_review": candidate.get("needs_review", True),
+            },
         )
         link_records(conn, "fact", rid, "derived_from_episode", "fact", episode_id)
         created.append({"id": rid, "action": action, "category": category, "key": candidate["key"]})
