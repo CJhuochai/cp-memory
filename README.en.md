@@ -67,6 +67,8 @@ Restart Codex after installation. If Codex asks you to trust hooks, approve the 
 
 - Do not commit your real `memory.db`, logs, private summaries, or environment files.
 - Automatic extraction is intentionally conservative. Generated memories can be reviewed, corrected, marked stale, or marked wrong.
+- New sessions show a reminder when memories need review, but they do not auto-delete memory or auto-resolve conflicts.
+- Weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only; long-term personal memories, tasks, and decisions are protected by default.
 - Examples and screenshots use sanitized content, so you do not need to expose your real memory database.
 
 ## Comparison

@@ -894,6 +894,54 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("personal_possible_contradiction", digest)
         self.assertIn("personal_expired_ongoing", digest)
 
+    def test_review_reminder_only_appears_when_action_is_needed(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.assertEqual(self.store.build_review_reminder(conn, subject="user"), "")
+
+        self.store.upsert_personal_memory(
+            conn,
+            "preference",
+            "user",
+            "communication_style",
+            "用户喜欢中文结论先行。",
+            source="stop-hook-auto-extract",
+            evidence_count=1,
+            stability_score=50,
+        )
+        reminder = self.store.build_review_reminder(conn, subject="user")
+        conn.close()
+
+        self.assertIn("CP Memory 提醒 / Reminder", reminder)
+        self.assertIn("待确认 1", reminder)
+        self.assertIn("不会自动删除记忆", reminder)
+
+    def test_maintenance_expire_does_not_delete_protected_personal_memory(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        old_date = "2000-01-01 00:00:00"
+        normal_id, _ = self.store.upsert_fact(conn, "Scratch", "old_note", "临时低价值记录", category="fact")
+        protected_id, _, _ = self.store.upsert_personal_memory(conn, "preference", "user", "style", "用户喜欢中文说明。")
+        self.store.upsert_meta(conn, normal_id, 1, old_date, source="test")
+        self.store.upsert_meta(conn, protected_id, 1, old_date, source="test")
+        conn.commit()
+        conn.close()
+
+        spec = importlib.util.spec_from_file_location("memory_mcp_server_test", MCP_CONFIG.parent / "scripts" / "memory-mcp-server.py")
+        mcp_server = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mcp_server)
+        result = json.loads(mcp_server.memory_maintenance(dry_run=False, expire=True, limit=20))
+
+        conn = self.store.get_db()
+        normal = conn.execute("SELECT id FROM facts WHERE id=?", (normal_id,)).fetchone()
+        protected = conn.execute("SELECT id FROM facts WHERE id=?", (protected_id,)).fetchone()
+        conn.close()
+
+        self.assertEqual(result["deleted"], 1)
+        self.assertEqual(result["protected_expired_skipped"], 1)
+        self.assertIsNone(normal)
+        self.assertIsNotNone(protected)
+
     def test_review_recomputes_after_resolution_and_leaves_audit_links(self):
         conn = self.store.get_db()
         self.store.init_db(conn)

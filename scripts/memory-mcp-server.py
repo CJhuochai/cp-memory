@@ -12,6 +12,9 @@ from cp_memory_store import (
     build_review_digest,
     CATEGORY_CHECKPOINT,
     CATEGORY_DECISION,
+    CATEGORY_AUTOMATION,
+    CATEGORY_TASK,
+    CATEGORY_TASK_DONE,
     PERSONAL_MEMORY_CATEGORIES,
     CATEGORY_SUMMARY,
     active_task,
@@ -852,10 +855,26 @@ def memory_maintenance(dry_run: bool = True, expire: bool = False, limit: int = 
         review_fact(conn, row["id"], category=row["category"], source=row["source"])
         reviewed += 1
     ensure_fulltext_populated(conn)
+    protected_categories = sorted(
+        {
+            CATEGORY_AUTOMATION,
+            CATEGORY_DECISION,
+            CATEGORY_TASK,
+            CATEGORY_TASK_DONE,
+            *PERSONAL_MEMORY_CATEGORIES,
+        }
+    )
+    protected_placeholders = ",".join("?" for _ in protected_categories)
     expired_rows = conn.execute(
-        "SELECT fact_id FROM memory_meta WHERE pinned=0 AND importance <= 3 AND expires_at != '' AND expires_at < ? LIMIT ?",
-        (ts, normalize_limit(limit, default=200, maximum=1000)),
+        "SELECT m.fact_id FROM memory_meta m JOIN facts f ON f.id=m.fact_id "
+        f"WHERE m.pinned=0 AND m.importance <= 3 AND m.expires_at != '' AND m.expires_at < ? AND f.category NOT IN ({protected_placeholders}) LIMIT ?",
+        (ts, *protected_categories, normalize_limit(limit, default=200, maximum=1000)),
     ).fetchall()
+    protected_expired = conn.execute(
+        "SELECT COUNT(*) AS cnt FROM memory_meta m JOIN facts f ON f.id=m.fact_id "
+        f"WHERE m.pinned=0 AND m.importance <= 3 AND m.expires_at != '' AND m.expires_at < ? AND f.category IN ({protected_placeholders})",
+        (ts, *protected_categories),
+    ).fetchone()["cnt"]
     expired_ids = [row["fact_id"] for row in expired_rows]
     deleted = 0
     if expire and not dry_run:
@@ -888,6 +907,7 @@ def memory_maintenance(dry_run: bool = True, expire: bool = False, limit: int = 
             "backfilled_meta": backfilled,
             "reviewed_records": reviewed,
             "expired_candidates": len(expired_ids),
+            "protected_expired_skipped": protected_expired,
             "deleted": deleted,
             "duplicate_groups": duplicate_count,
             "personal_conflict_count": len(personal_conflicts),

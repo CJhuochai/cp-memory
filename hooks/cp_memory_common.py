@@ -26,6 +26,7 @@ from cp_memory_store import (  # noqa: E402
     SUMMARY_HISTORY_PREFIX,
     active_task,
     build_restore_context,
+    build_review_reminder,
     classify_importance,
     detect_restore_intent,
     detect_memory_scope,
@@ -726,7 +727,8 @@ def persist_checkpoint(conn, trigger, turn_id, raw_data):
 def build_startup_context(prompt=""):
     conn = connect()
     try:
-        return build_restore_context(conn, prompt=prompt, max_chars=3200), detect_restore_intent(prompt)
+        context = build_restore_context(conn, prompt=prompt, max_chars=3200)
+        return context + build_review_reminder(conn, subject="user", limit=10), detect_restore_intent(prompt)
     finally:
         conn.close()
 

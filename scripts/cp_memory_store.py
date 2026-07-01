@@ -1486,6 +1486,24 @@ def build_review_digest(conn, subject="user", limit=10):
     return "\n".join(lines).strip() + "\n"
 
 
+def build_review_reminder(conn, subject="user", limit=10):
+    review = personal_memory_review(conn, subject=subject, limit=limit)
+    cleanup_count = len(auto_extract_cleanup_candidates(conn, limit=limit))
+    needs_review = len(review["review_candidates"])
+    conflicts = len(review["conflicts"])
+    suggestions = len(review["consolidation_suggestions"])
+    total = needs_review + conflicts + suggestions + cleanup_count
+    if total <= 0:
+        return ""
+    return (
+        "\n\n---\n"
+        "CP Memory 提醒 / Reminder: "
+        f"{total} 项记忆待审阅 "
+        f"(待确认 {needs_review}, 冲突/过期 {conflicts}, 可提炼 {suggestions}, 噪声候选 {cleanup_count})。"
+        "需要时可运行 `memory_review_digest(subject=\"user\")` 查看详情；不会自动删除记忆。"
+    )
+
+
 def upsert_payload(conn, fact_id, content, content_type="text/plain"):
     ts = now_local()
     text = payload_text(content)
