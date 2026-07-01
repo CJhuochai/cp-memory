@@ -24,6 +24,7 @@
     "longDescription": "CP Memory 为 Codex 提供本地优先的个人记忆能力。它通过 MCP tools、skills 和 lifecycle hooks 保存并恢复项目规则、偏好、持续事项、事件、决策和会话检查点；同时提供冲突检测、纠错历史、复核队列和治理报告，帮助用户长期使用后仍然保持记忆可信。数据默认保存在 ~/.cp-memory/memory.db。 / CP Memory gives Codex a local-first personal memory layer. It uses MCP tools, skills, and lifecycle hooks to save and restore project rules, preferences, ongoing work, episodes, decisions, and conversation checkpoints. It also provides conflict detection, correction history, review queues, and governance reports so memory stays trustworthy after long-term use. Data is stored under ~/.cp-memory/memory.db by default.",
     "developerName": "Chen Pi",
     "category": "Productivity",
+    "websiteURL": "https://github.com/CJhuochai/cp-memory",
     "capabilities": [
       "Read",
       "Write"

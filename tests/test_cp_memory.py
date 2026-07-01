@@ -87,6 +87,8 @@ class CpMemoryTests(unittest.TestCase):
         self.assertEqual(plugin["name"], "cp-memory")
         self.assertEqual(plugin["source"]["source"], "url")
         self.assertIn("github.com", plugin["source"]["url"])
+        manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
 
     def test_install_keeps_global_hooks_config_untouched_and_does_not_copy_hook_scripts(self):
