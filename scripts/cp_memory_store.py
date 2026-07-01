@@ -762,7 +762,8 @@ def upsert_personal_memory(
         """
         SELECT f.id, f.value,
                COALESCE(m.evidence_count, 1) AS evidence_count,
-               COALESCE(m.valid_until, '') AS valid_until
+               COALESCE(m.valid_until, '') AS valid_until,
+               COALESCE(m.scope, '') AS scope
         FROM facts f
         LEFT JOIN memory_meta m ON m.fact_id = f.id
         WHERE f.entity=? AND f.property=?
@@ -777,6 +778,7 @@ def upsert_personal_memory(
             clean_valid_until = add_days_local(21)
         elif existing_row and clean_text(existing_row["valid_until"]):
             clean_valid_until = clean_text(existing_row["valid_until"])
+    clean_scope = clean_text(scope) or (clean_text(existing_row["scope"]) if existing_row else "")
     structured_payload = {
         "memory_type": category,
         "subject": clean_subject,
@@ -786,7 +788,7 @@ def upsert_personal_memory(
         "evidence_count": max(1, int(evidence_count or 1)),
         "valid_from": clean_text(valid_from),
         "valid_until": clean_valid_until,
-        "scope": clean_text(scope),
+        "scope": clean_scope,
         "sensitivity": clean_text(sensitivity) or "normal",
         "source": source,
     }
@@ -830,7 +832,7 @@ def upsert_personal_memory(
             now_local(),
             clean_text(valid_from),
             clean_valid_until,
-            clean_text(scope),
+            clean_scope,
             clean_text(sensitivity) or "normal",
             rid,
         ),
@@ -1055,6 +1057,44 @@ def active_memory_row(row, now_text=""):
     if status in {"wrong", "stale"}:
         return False
     return True
+
+
+def detect_memory_scope(text):
+    cleaned = clean_text(text)
+    lowered = cleaned.lower()
+    if not cleaned:
+        return ""
+    if "cjhuochai/cp-memory" in lowered:
+        return "repo:CJhuochai/cp-memory"
+    if "cp memory" in lowered or "cp-memory" in lowered:
+        return "project:cp-memory"
+    if "basisproject" in lowered or "e:\\basisproject" in lowered:
+        return "workspace:E:\\BasisProject"
+    repo_match = re.search(r"\b([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)\b", cleaned)
+    if repo_match:
+        return f"repo:{repo_match.group(1)}"
+    return ""
+
+
+def prompt_scopes(prompt):
+    scope = detect_memory_scope(prompt)
+    scopes = []
+    if scope:
+        scopes.append(scope)
+        if scope == "repo:CJhuochai/cp-memory":
+            scopes.append("project:cp-memory")
+    return scopes
+
+
+def scope_rank(row_scope, active_scopes=None):
+    scope = clean_text(row_scope)
+    if not scope:
+        return 1
+    if active_scopes and scope in active_scopes:
+        return 3
+    if scope == "global":
+        return 2
+    return 0
 
 
 def restorable_memory_row(row, now_text=""):
@@ -1349,7 +1389,7 @@ def personal_memory_review(conn, subject="user", limit=10):
     recent = conn.execute(
         "SELECT f.id, f.entity, f.property, f.value, f.category, f.updated_at, "
         "COALESCE(m.stability_score, 50) AS stability_score, COALESCE(m.evidence_count, 1) AS evidence_count, "
-        "COALESCE(m.correction_status, '') AS correction_status, COALESCE(m.source, '') AS source "
+        "COALESCE(m.correction_status, '') AS correction_status, COALESCE(m.scope, '') AS scope, COALESCE(m.source, '') AS source "
         "FROM facts f LEFT JOIN memory_meta m ON m.fact_id = f.id "
         f"WHERE f.category IN ({placeholders}) ORDER BY f.updated_at DESC LIMIT ?",
         [*sorted(PERSONAL_MEMORY_CATEGORIES), limit],
@@ -1376,7 +1416,9 @@ def personal_memory_review(conn, subject="user", limit=10):
 
 
 def format_digest_memory(row):
-    return f"- `{clean_text(row.get('category', ''))}/{clean_text(row.get('property', ''))}` {clean_text(row.get('value', ''))}"
+    scope = clean_text(row.get("scope", ""))
+    scope_suffix = f" scope=`{scope}`" if scope else ""
+    return f"- `{clean_text(row.get('category', ''))}/{clean_text(row.get('property', ''))}`{scope_suffix} {clean_text(row.get('value', ''))}"
 
 
 def format_digest_conflict(conflict):
@@ -2117,7 +2159,7 @@ def governance_acceptance_report(conn, limit=5):
     }
 
 
-def personal_restore_rank(row, keywords=None):
+def personal_restore_rank(row, keywords=None, active_scopes=None):
     row_dict = dict(row)
     text = fact_search_text(row_dict)
     clean_keywords = [clean_text(item).lower() for item in (keywords or []) if clean_text(item)]
@@ -2135,6 +2177,7 @@ def personal_restore_rank(row, keywords=None):
         active_memory_row(row_dict),
         correction_status == "confirmed",
         auto_extract_penalty == 0,
+        scope_rank(row_dict.get("scope", ""), active_scopes=active_scopes),
         ongoing_recent_boost,
         keyword_hits,
         int(row_dict.get("stability_score") or 50),
@@ -2327,6 +2370,7 @@ def build_recall_sections(conn, rows, intent="", query="", limit_per_section=4):
 
 def matching_personal_memories(conn, prompt="", limit=6):
     keywords = restore_keywords(prompt)
+    scopes = prompt_scopes(prompt)
     rows = []
     if keywords:
         rows = search_records(conn, " ".join(keywords), limit=limit * 2, mode="or", categories=sorted(PERSONAL_MEMORY_CATEGORIES))
@@ -2334,7 +2378,7 @@ def matching_personal_memories(conn, prompt="", limit=6):
         rows = recent_records(conn, categories=sorted(PERSONAL_MEMORY_CATEGORIES), limit=limit * 2)
     now_text = now_local()
     rows = [row for row in rows if restorable_memory_row(dict(row), now_text=now_text)]
-    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords), reverse=True)
+    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
     deduped = []
     seen = set()
     for row in rows:
@@ -2350,6 +2394,7 @@ def matching_personal_memories(conn, prompt="", limit=6):
 
 def recent_personal_episodes(conn, prompt="", limit=3):
     keywords = restore_keywords(prompt)
+    scopes = prompt_scopes(prompt)
     if keywords:
         rows = search_records(conn, " ".join(keywords), limit=limit * 3, mode="or", categories=[CATEGORY_EPISODE])
         if not rows:
@@ -2358,7 +2403,7 @@ def recent_personal_episodes(conn, prompt="", limit=3):
         rows = recent_records(conn, categories=[CATEGORY_EPISODE], limit=limit * 2)
     now_text = now_local()
     rows = [row for row in rows if restorable_memory_row(dict(row), now_text=now_text)]
-    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords), reverse=True)
+    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
     deduped = []
     seen = set()
     for row in rows:
@@ -2594,6 +2639,7 @@ def build_restore_context(conn, prompt="", max_chars=3200):
     intent = detect_restore_intent(prompt)
     scored = classify_restore_intents(prompt)
     keywords = restore_keywords(prompt)
+    scopes = prompt_scopes(prompt)
     lines = ["## CP Memory Context", f"Intent: {intent}"]
     task = active_task(conn)
     if task:
@@ -2632,7 +2678,7 @@ def build_restore_context(conn, prompt="", max_chars=3200):
         matched_rows = matching_personal_memories(conn, prompt=prompt, limit=6 if intent != "startup" else 3)
         now_text = now_local()
         personal_rows = [row for row in personal_rows if restorable_memory_row(dict(row), now_text=now_text)]
-        personal_rows = sorted(personal_rows, key=lambda row: personal_restore_rank(row, keywords=keywords), reverse=True)
+        personal_rows = sorted(personal_rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
         combined_rows = []
         seen = set()
         for row in list(matched_rows) + list(personal_rows):
@@ -2663,7 +2709,7 @@ def build_restore_context(conn, prompt="", max_chars=3200):
             (CATEGORY_PROFILE, CATEGORY_DECISION, 6 if intent == "startup" else 12),
         ).fetchall()
         identity_rows = [row for row in identity_rows if restorable_memory_row(dict(row))]
-        identity_rows = sorted(identity_rows, key=lambda row: personal_restore_rank(row, keywords=keywords), reverse=True)
+        identity_rows = sorted(identity_rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
         layered_seed_rows.extend(identity_rows)
 
     if layered_seed_rows:

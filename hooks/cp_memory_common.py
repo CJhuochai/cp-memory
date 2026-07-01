@@ -28,6 +28,7 @@ from cp_memory_store import (  # noqa: E402
     build_restore_context,
     classify_importance,
     detect_restore_intent,
+    detect_memory_scope,
     expiry_for_importance,
     get_db,
     init_db,
@@ -604,6 +605,7 @@ def persist_personal_signals(conn, prompt, assistant, summary_id=""):
     if not candidates and not decision_candidates:
         return {"episode_id": "", "created": []}
     episode_text = meaningful_text(f"{prompt} {assistant}", 240)
+    scope = detect_memory_scope(f"{prompt} {assistant}")
     episode_id, _, _ = upsert_personal_memory(
         conn,
         "episode",
@@ -615,6 +617,7 @@ def persist_personal_signals(conn, prompt, assistant, summary_id=""):
         source="stop-hook-auto-episode",
         evidence_count=1,
         stability_score=48,
+        scope=scope,
         payload={"prompt": prompt, "assistant": assistant, "candidates": candidates},
     )
     if summary_id:
@@ -634,6 +637,7 @@ def persist_personal_signals(conn, prompt, assistant, summary_id=""):
             source="stop-hook-auto-extract",
             evidence_count=1,
             stability_score=candidate["stability_score"],
+            scope=scope,
             payload={
                 "prompt": prompt,
                 "assistant": assistant,
