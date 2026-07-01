@@ -852,6 +852,46 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("review_candidates", review)
         self.assertTrue(review["consolidation_suggestions"])
 
+    def test_review_digest_outputs_markdown_with_actionable_sections(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(
+            conn,
+            "preference",
+            "user",
+            "communication_style",
+            "用户喜欢中文结论先行。",
+            source="stop-hook-auto-extract",
+            evidence_count=1,
+            stability_score=50,
+        )
+        self.store.upsert_personal_memory(
+            conn,
+            "ongoing",
+            "user",
+            "readme_work",
+            "用户当前在做 README 优化。",
+            valid_until="2000-01-01 00:00:00",
+        )
+        conn.execute(
+            "INSERT INTO facts (id, entity, property, value, confidence, tags, category, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            ("digest_conflict", "Personal.BeliefDecision.user", "communication_style", "用户不喜欢中文说明。", "high", "personal-assistant,belief_decision", "belief_decision", self.store.now_local(), self.store.now_local()),
+        )
+        self.store.upsert_meta(conn, "digest_conflict", 5, "", source="test-digest", summary_type="belief_decision")
+        conn.commit()
+
+        digest = self.store.build_review_digest(conn, subject="user", limit=10)
+        conn.close()
+
+        self.assertIn("# CP Memory Review Digest", digest)
+        self.assertIn("## 最近新增 / Recent Memories", digest)
+        self.assertIn("## 待确认 / Needs Review", digest)
+        self.assertIn("## 冲突和过期 / Conflicts And Stale Candidates", digest)
+        self.assertIn("用户喜欢中文结论先行", digest)
+        self.assertIn("review_or_confirm", digest)
+        self.assertIn("personal_possible_contradiction", digest)
+        self.assertIn("personal_expired_ongoing", digest)
+
     def test_review_recomputes_after_resolution_and_leaves_audit_links(self):
         conn = self.store.get_db()
         self.store.init_db(conn)

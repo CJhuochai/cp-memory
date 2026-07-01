@@ -1,6 +1,6 @@
 {
   "name": "cp-memory",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：记住重要上下文，解释为什么记住，并允许安全纠错。 / CP Memory is a local-first, reviewable memory layer for Codex: remember useful context, explain why, and correct bad memory safely.",
   "author": {
     "name": "Chen Jian"

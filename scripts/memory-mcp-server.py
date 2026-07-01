@@ -9,6 +9,7 @@ from cp_memory_store import (
     search_codex_auxiliary_memory,
     should_use_auxiliary_memory,
     build_restore_context,
+    build_review_digest,
     CATEGORY_CHECKPOINT,
     CATEGORY_DECISION,
     PERSONAL_MEMORY_CATEGORIES,
@@ -259,6 +260,15 @@ def memory_personal_review(subject: str = "user", limit: int = 10) -> str:
     review = personal_memory_review(conn, subject=subject, limit=limit)
     conn.close()
     return json.dumps(review, ensure_ascii=False, default=str)
+
+
+@mcp.tool(description="Return a Markdown memory review digest with recent memories, pending auto-extracts, conflicts, stale candidates, and resolution suggestions.")
+def memory_review_digest(subject: str = "user", limit: int = 10) -> str:
+    conn = get_db()
+    init_db(conn)
+    digest = build_review_digest(conn, subject=subject, limit=limit)
+    conn.close()
+    return digest
 
 
 @mcp.tool(description="Mark a memory as corrected, stale, wrong, scoped, or confirmed; optionally replace its value.")
