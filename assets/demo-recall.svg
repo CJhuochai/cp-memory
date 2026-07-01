@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" role="img" aria-labelledby="title desc">
+  <title id="title">CP Memory recall demo</title>
+  <desc id="desc">A sanitized terminal-style example showing CP Memory restoring a release rule.</desc>
+  <rect width="920" height="420" rx="28" fill="#f6efe4"/>
+  <rect x="44" y="40" width="832" height="340" rx="22" fill="#201914"/>
+  <circle cx="82" cy="76" r="8" fill="#ef6f5e"/>
+  <circle cx="110" cy="76" r="8" fill="#f2c46d"/>
+  <circle cx="138" cy="76" r="8" fill="#71c48d"/>
+  <text x="170" y="82" fill="#cbbfae" font-family="Consolas, monospace" font-size="18">CP Memory / sanitized recall</text>
+  <text x="76" y="132" fill="#f7d08a" font-family="Consolas, monospace" font-size="19">User</text>
+  <text x="150" y="132" fill="#f5f1e8" font-family="Consolas, monospace" font-size="19">Remember: releases must use a branch, tests, and PR merge.</text>
+  <text x="76" y="188" fill="#8bd3ff" font-family="Consolas, monospace" font-size="19">Later</text>
+  <text x="150" y="188" fill="#f5f1e8" font-family="Consolas, monospace" font-size="19">What are the release rules for this plugin?</text>
+  <rect x="76" y="220" width="768" height="108" rx="14" fill="#2d241d"/>
+  <text x="102" y="258" fill="#a7f3d0" font-family="Consolas, monospace" font-size="19">CP Memory restored</text>
+  <text x="102" y="292" fill="#f5f1e8" font-family="Consolas, monospace" font-size="18">source: local primary store · status: active · reviewable</text>
+  <text x="102" y="320" fill="#f5f1e8" font-family="Consolas, monospace" font-size="18">rule: branch first → run tests → merge through PR</text>
+  <text x="76" y="358" fill="#cbbfae" font-family="Consolas, monospace" font-size="16">Demo uses sanitized content. No real memory database or private paths are shown.</text>
+</svg>

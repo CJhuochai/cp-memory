@@ -55,7 +55,8 @@ try {
     }
 
     $installedRoot = Join-Path $TempProfile "plugins\cp-memory"
-    $cacheRoot = Join-Path $TempProfile ".codex\plugins\cache\personal\cp-memory\1.0.21"
+    $manifest = Get-Content (Join-Path $PluginRoot ".codex-plugin\plugin.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+    $cacheRoot = Join-Path $TempProfile ".codex\plugins\cache\personal\cp-memory\$($manifest.version)"
     $automationFile = Join-Path $TempProfile ".codex\automations\cp-memory-weekly-maintenance\automation.toml"
 
     Assert-PathExists (Join-Path $installedRoot ".codex-plugin\plugin.json")
