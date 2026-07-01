@@ -1375,6 +1375,75 @@ def personal_memory_review(conn, subject="user", limit=10):
     }
 
 
+def format_digest_memory(row):
+    return f"- `{clean_text(row.get('category', ''))}/{clean_text(row.get('property', ''))}` {clean_text(row.get('value', ''))}"
+
+
+def format_digest_conflict(conflict):
+    conflict_type = clean_text(conflict.get("type", ""))
+    if "item" in conflict:
+        item = dict(conflict.get("item") or {})
+        return f"- `{conflict_type}` {clean_text(item.get('property', ''))}: {clean_text(item.get('value', ''))}"
+    items = [dict(item) for item in conflict.get("items", [])]
+    values = " | ".join(clean_text(item.get("value", "")) for item in items[:2])
+    return f"- `{conflict_type}` {clean_text(conflict.get('property', ''))}: {values}"
+
+
+def build_review_digest(conn, subject="user", limit=10):
+    review = personal_memory_review(conn, subject=subject, limit=limit)
+    lines = [
+        "# CP Memory Review Digest",
+        "",
+        f"- Subject: `{review['subject']}`",
+        f"- Total personal memories: {sum(int(value or 0) for value in review['counts'].values())}",
+        f"- Review candidates: {len(review['review_candidates'])}",
+        f"- Conflicts: {len(review['conflicts'])}",
+        f"- Consolidation suggestions: {len(review['consolidation_suggestions'])}",
+        "",
+        "## 最近新增 / Recent Memories",
+    ]
+    if review["recent"]:
+        lines.extend(format_digest_memory(dict(row)) for row in review["recent"][:limit])
+    else:
+        lines.append("- No recent personal memories.")
+
+    lines.extend(["", "## 待确认 / Needs Review"])
+    if review["review_candidates"]:
+        for item in review["review_candidates"][:limit]:
+            lines.append(f"- `{item['category']}/{item['property']}` {item['value']}")
+            lines.append(f"  - 建议 / Action: {item['recommended_action']}")
+            lines.append(f"  - 原因 / Reason: {item['reason_summary']}")
+    else:
+        lines.append("- No pending auto-extracted memories.")
+
+    lines.extend(["", "## 冲突和过期 / Conflicts And Stale Candidates"])
+    if review["conflicts"]:
+        lines.extend(format_digest_conflict(dict(item)) for item in review["conflicts"][:limit])
+    else:
+        lines.append("- No open conflicts or stale candidates.")
+
+    lines.extend(["", "## 解决建议 / Resolution Suggestions"])
+    if review["resolution_candidates"]:
+        for item in review["resolution_candidates"][:limit]:
+            winner = dict(item.get("winner_suggestion") or {})
+            lines.append(f"- `{item['recommended_action']}` {clean_text(item.get('property', ''))}")
+            lines.append(f"  - 建议保留 / Keep: `{winner.get('id', '')}` {clean_text(winner.get('value', ''))}")
+            lines.append(f"  - 建议处理 / Resolve: {', '.join(item.get('loser_ids', [])) or 'none'}")
+            lines.append(f"  - 原因 / Reason: {item['reason_summary']}")
+    else:
+        lines.append("- No conflict resolution suggestions.")
+
+    lines.extend(["", "## 可提炼事件 / Consolidation Suggestions"])
+    if review["consolidation_suggestions"]:
+        for item in review["consolidation_suggestions"][:limit]:
+            candidates = item.get("candidates", [])
+            lines.append(f"- Episode `{item.get('episode_id', '')}` has {len(candidates)} candidate(s).")
+    else:
+        lines.append("- No episode consolidation suggestions.")
+
+    return "\n".join(lines).strip() + "\n"
+
+
 def upsert_payload(conn, fact_id, content, content_type="text/plain"):
     ts = now_local()
     text = payload_text(content)
