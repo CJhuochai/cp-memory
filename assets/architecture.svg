@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">CP Memory architecture</title>
+  <desc id="desc">Codex lifecycle hooks and MCP tools write to a local SQLite memory store, then restore governed context back to Codex.</desc>
+  <rect width="920" height="360" rx="28" fill="#fff7ed"/>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#7c2d12" flood-opacity=".12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9a3412"/>
+    </marker>
+  </defs>
+  <text x="460" y="44" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#7c2d12">CP Memory: Local, Reviewable Memory Layer</text>
+  <g filter="url(#shadow)">
+    <rect x="44" y="96" width="180" height="138" rx="20" fill="#ffffff"/>
+    <text x="134" y="136" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">Codex</text>
+    <text x="134" y="166" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Prompts</text>
+    <text x="134" y="188" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Lifecycle hooks</text>
+    <text x="134" y="210" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">MCP tools</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="294" y="82" width="230" height="166" rx="20" fill="#ffedd5"/>
+    <text x="409" y="122" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">CP Memory Plugin</text>
+    <text x="409" y="152" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Extract explicit memories</text>
+    <text x="409" y="176" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Restore scoped context</text>
+    <text x="409" y="200" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Review and correct</text>
+    <text x="409" y="224" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Maintain safely</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="596" y="96" width="280" height="138" rx="20" fill="#ffffff"/>
+    <text x="736" y="136" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">Local SQLite Store</text>
+    <text x="736" y="166" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">facts + payloads + links</text>
+    <text x="736" y="188" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">meta + decisions + workflows</text>
+    <text x="736" y="210" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">default: ~/.cp-memory/memory.db</text>
+  </g>
+  <line x1="224" y1="165" x2="286" y2="165" stroke="#9a3412" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="524" y1="165" x2="588" y2="165" stroke="#9a3412" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M 700 246 C 610 306 302 306 210 246" fill="none" stroke="#9a3412" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="456" y="302" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#7c2d12">governed context returns to Codex: scoped, reviewed, and safe by default</text>
+</svg>

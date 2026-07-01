@@ -24,6 +24,8 @@ CP Memory is a local memory plugin for Codex. It stores facts, preferences, ongo
 
 The goal is not to remember as much as possible. The goal is memory that remains trustworthy after long-term use: explainable, reviewable, correctable, and governable.
 
+![CP Memory architecture](assets/architecture.svg)
+
 ![CP Memory recall demo](assets/demo-recall.svg)
 
 ## Why Use It
@@ -33,6 +35,16 @@ The goal is not to remember as much as possible. The goal is memory that remains
 - Long-term personal memory: supports profiles, preferences, relationships, ongoing work, episodes, and stable decisions.
 - Governable: includes conflict detection, correction history, review queues, and governance reports.
 - Conservative extraction: extracts long-term memory only from explicit signals to reduce noisy or incorrect memory.
+
+## Current Capabilities
+
+- Context restore: restores relevant local-primary memory on startup and eligible prompts.
+- Automatic extraction: conservatively creates long-term personal memory candidates from explicit statements.
+- Project scope: prioritizes current-project memories with `repo:`, `project:`, and `workspace:` scopes.
+- Reviewable governance: supports review digests, conflict suggestions, correction states, and startup reminders.
+- Safe maintenance: weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only.
+
+![CP Memory governance loop](assets/governance-loop.svg)
 
 ## 30-Second Example
 
@@ -78,6 +90,8 @@ If you have seen other memory projects, start with [docs/comparison.md](docs/com
 ## Roadmap
 
 See [docs/roadmap.md](docs/roadmap.md) for future directions. The roadmap prioritizes local-first behavior, explainability, correctability, and privacy safety.
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## Local Development
 

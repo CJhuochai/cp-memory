@@ -52,8 +52,8 @@ python tests\personal_memory_benchmark.py
 
 建议遵循语义化版本：
 
-- 补丁修复：`1.0.21` -> `1.0.22`
-- 向后兼容的新功能：`1.0.21` -> `1.1.0`
+- 补丁修复：`1.4.0` -> `1.4.1`
+- 向后兼容的新功能：`1.4.0` -> `1.5.0`
 - 破坏性变更：`1.x.x` -> `2.0.0`
 
 ### 合并和发布
@@ -70,7 +70,7 @@ git pull
 4. 打版本 tag。
 
 ```powershell
-git tag v1.0.22
+git tag vX.Y.Z
 git push origin main --tags
 ```
 
@@ -139,8 +139,8 @@ The version lives in:
 
 Recommended semantic versioning:
 
-- Patch fix: `1.0.21` -> `1.0.22`
-- Backward-compatible feature: `1.0.21` -> `1.1.0`
+- Patch fix: `1.4.0` -> `1.4.1`
+- Backward-compatible feature: `1.4.0` -> `1.5.0`
 - Breaking change: `1.x.x` -> `2.0.0`
 
 ### Merge And Release
@@ -157,7 +157,7 @@ git pull
 4. Create a release tag.
 
 ```powershell
-git tag v1.0.22
+git tag vX.Y.Z
 git push origin main --tags
 ```
 

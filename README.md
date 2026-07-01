@@ -24,6 +24,8 @@ CP Memory 是一个面向 Codex 的本地记忆插件。它把事实、偏好、
 
 它的重点不是“尽可能多地记住”，而是“长期使用后仍然可信”：可解释、可审阅、可纠错、可治理。
 
+![CP Memory architecture](assets/architecture.svg)
+
 ![CP Memory recall demo](assets/demo-recall.svg)
 
 ## 为什么用它
@@ -33,6 +35,16 @@ CP Memory 是一个面向 Codex 的本地记忆插件。它把事实、偏好、
 - 长期个人记忆：支持画像、偏好、关系、持续事项、事件和稳定决策。
 - 可治理：支持冲突检测、纠错历史、复核队列和治理报告。
 - 保守提炼：只从明确表达中提炼长期记忆，降低“乱记”和上下文污染。
+
+## 当前能力
+
+- 恢复上下文：启动和提问时按需恢复本地主库里的相关记忆。
+- 自动提炼：从明确表达中保守生成个人长期记忆候选。
+- 项目范围：按 `repo:`、`project:`、`workspace:` 等 scope 优先恢复当前项目相关记忆。
+- 可审阅治理：支持审阅报告、冲突建议、纠错状态和启动提醒。
+- 安全维护：每周维护只做健康检查、治理预检和低风险过期清理。
+
+![CP Memory governance loop](assets/governance-loop.svg)
 
 ## 30 秒例子
 
@@ -78,6 +90,8 @@ codex plugin add cp-memory@cp-memory
 ## 路线图
 
 后续方向见 [docs/roadmap.md](docs/roadmap.md)。路线图会优先保持本地优先、可解释、可纠错和隐私安全。
+
+版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 本地开发
 
