@@ -5,27 +5,52 @@
 <h1 align="center">CP Memory</h1>
 
 <p align="center">
-  A local-first memory plugin for Codex that remembers important context and keeps it reviewable, explainable, and correctable.
+  A local-first, reviewable memory layer for Codex: remember useful context, explain why, and correct bad memory safely.
 </p>
 
 <p align="center">
   <a href="README.md">中文</a> | English
 </p>
 
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
+  <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
+</p>
+
 ---
 
-CP Memory is a local-first personal memory plugin for Codex. It stores facts, conversation summaries, personal preferences, relationships, ongoing work, decisions, and checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
+CP Memory is a local memory plugin for Codex. It stores facts, preferences, ongoing work, episodes, decisions, and conversation checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
 
-It is not trying to be a large memory platform. It is a memory layer for long-running personal assistant work: local, explainable, reviewable, and correctable.
+The goal is not to remember as much as possible. The goal is memory that remains trustworthy after long-term use: explainable, reviewable, correctable, and governable.
 
-## Highlights
+![CP Memory recall demo](assets/demo-recall.svg)
+
+## Why Use It
 
 - Local-first: data is stored under `~/.cp-memory/memory.db` by default.
-- Plugin-native: supports Codex plugin metadata, MCP server, skills, and lifecycle hooks.
-- Personal memory: supports profile, preference, relationship, ongoing, episode, and belief decision models.
+- Codex-native: supports plugin metadata, MCP server, skills, and lifecycle hooks.
+- Long-term personal memory: supports profiles, preferences, relationships, ongoing work, episodes, and stable decisions.
 - Governable: includes conflict detection, correction history, review queues, and governance reports.
-- Conservative extraction: extracts long-term memory only from explicit signals, avoiding implementation-note noise.
-- Cross-platform install: GitHub marketplace installation works through Codex plugin support on Windows, macOS, and Linux.
+- Conservative extraction: extracts long-term memory only from explicit signals to reduce noisy or incorrect memory.
+
+## 30-Second Example
+
+You tell Codex:
+
+```text
+Remember this: releases for this project must start on a branch, run tests, and merge through a PR.
+```
+
+In a later session, you ask:
+
+```text
+What are the release rules for this plugin?
+```
+
+CP Memory restores the relevant memory from the local primary store first, and Codex follows that rule. If the memory is wrong, you can mark it wrong, mark it stale, or write a corrected version.
+
+See more anonymized examples in [docs/examples.md](docs/examples.md).
 
 ## Install
 
@@ -38,40 +63,19 @@ codex plugin add cp-memory@cp-memory
 
 Restart Codex after installation. If Codex asks you to trust hooks, approve the CP Memory lifecycle hooks in the hooks view.
 
-## Local Development Install
-
-Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-The script is currently Windows-first. GitHub marketplace installation does not depend on it.
-
-## Configuration
-
-Default data path:
-
-```text
-~/.cp-memory/memory.db
-```
-
-You can override paths with environment variables:
-
-```text
-CP_MEMORY_HOME
-CP_MEMORY_DB_PATH
-CP_MEMORY_PLUGIN_HOME
-CP_MEMORY_OLD_HOME
-```
-
 ## Safety
 
-CP Memory stores local assistant memory. Do not commit your real `memory.db`, logs, private summaries, or environment files. The included `.gitignore` excludes common local database, cache, and environment files.
+- Do not commit your real `memory.db`, logs, private summaries, or environment files.
+- Automatic extraction is intentionally conservative. Generated memories can be reviewed, corrected, marked stale, or marked wrong.
+- Examples and screenshots use sanitized content, so you do not need to expose your real memory database.
 
-Automatic extraction is intentionally conservative. Generated memories can be reviewed, corrected, marked stale, or marked wrong.
+## Comparison
 
-## Development
+If you have seen other memory projects, start with [docs/comparison.md](docs/comparison.md). CP Memory's main difference is Codex lifecycle integration plus memory governance, not just storage and search.
+
+## Local Development
+
+Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
 
 Run the test suite:
 
@@ -83,12 +87,6 @@ Validate the installer in an isolated temporary profile without touching your re
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
-```
-
-Run the broader benchmark-style check:
-
-```powershell
-python tests\personal_memory_benchmark.py
 ```
 
 ## License

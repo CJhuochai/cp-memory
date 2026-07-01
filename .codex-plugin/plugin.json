@@ -1,40 +1,40 @@
 {
-    "name":  "cp-memory",
-    "version":  "1.0.21",
-    "description":  "CP Memory 是面向 Codex 的本地优先通用个人助手记忆系统，支持画像、偏好、关系、持续事项、事件、保守自动提炼、复核队列、治理统计、验收报告、噪声清理预案与安全纠错、稳定立场、个人记忆审阅、解决建议，以及正文载荷、治理评分、冲突检测、冲突解决、纠正状态、历史时间线与关系链路的统一检索、解释、恢复与主库优先 recall。",
-    "author":  {
-                   "name":  "Chen Jian"
-               },
-    "homepage":  "https://github.com/CJhuochai/cp-memory",
-    "repository":  "https://github.com/CJhuochai/cp-memory",
-    "license":  "MIT",
-    "keywords":  [
-                     "memory",
-                     "knowledge",
-                     "facts",
-                     "mcp",
-                     "cp-memory"
-                 ],
-    "skills":  "./skills/",
-    "hooks":  "./hooks/claude-codex-hooks.json",
-    "mcpServers":  "./.mcp.json",
-    "interface":  {
-                      "displayName":  "CP Memory",
-                      "shortDescription":  "本地优先的通用个人助手记忆系统",
-                      "longDescription":  "CP Memory 为 Codex 提供本地优先、单用户、强解释、低运维的通用个人助手记忆能力。它会在 facts 中保存适合人工浏览的语义预览，在 memory_payloads 中保存高保真正文或结构化内容，在 memory_links 中保存显式关系，在 memory_meta 中保存重要性、质量分、噪声分、稳定性、证据数、适用范围、敏感度与纠正状态等治理信息。新版支持 Profile、Preference、Relationship、Ongoing、Episode、BeliefDecision 六类个人记忆模型，可用 memory_personal_add、memory_personal_derive、memory_episode_consolidate、memory_personal_review、memory_personal_list、memory_personal_resolve、memory_correct、memory_inspect、memory_restore_context、memory_recall、memory_governance_report、memory_auto_extract_cleanup 等工具完成事件采集、长期记忆提炼、跨话题恢复、审阅、解释、纠正与冲突收敛；memory_recall 会默认先查 CP Memory 主库，再仅在主库命中不足时补充辅助背景，避免平台侧快照反客为主；review/conflicts 会给出 resolution_candidates、review_candidates 与 auto_extract_governance，恢复阶段会默认过滤 wrong/stale，并对未确认的 stop-hook-auto-extract 候选适度降权，确认后再提升优先级；inspect/explain 会展示 corrections 与 supersedes 的历史时间线，stop hook 会对极明确的高价值表达执行保守自动提炼，并额外过滤实现说明/代码示例类噪声，memory_governance_report 可对真实 memory.db 做非破坏性治理验收，memory_auto_extract_cleanup 则提供历史污染自动提炼项的 dry-run 清理预案，并默认使用更安全的 mark_wrong 策略进行受控治理。数据默认保存在 ~/.cp-memory/memory.db，并在需要时自动从 ~/.codex-memory/memory.db 迁移。",
-                      "developerName":  "Chen Pi",
-                      "category":  "Productivity",
-                      "capabilities":  [
-                                           "Read",
-                                           "Write"
-                                       ],
-                      "composerIcon":  "./assets/logo.png",
-                      "logo":  "./assets/logo.png",
-                      "brandColor":  "#6366F1",
-                      "defaultPrompt":  [
-                                            "记住一下：这个项目的构建命令是mvn clean install",
-                                            "查一下我上次记录的考勤导出Bug",
-                                            "帮我看看当前有什么活跃任务"
-                                        ]
-                  }
+  "name": "cp-memory",
+  "version": "1.0.22",
+  "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：记住重要上下文，解释为什么记住，并允许安全纠错。 / CP Memory is a local-first, reviewable memory layer for Codex: remember useful context, explain why, and correct bad memory safely.",
+  "author": {
+    "name": "Chen Jian"
+  },
+  "homepage": "https://github.com/CJhuochai/cp-memory",
+  "repository": "https://github.com/CJhuochai/cp-memory",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "knowledge",
+    "facts",
+    "mcp",
+    "cp-memory"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/claude-codex-hooks.json",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "CP Memory",
+    "shortDescription": "本地优先的 Codex 可审阅记忆层 / Local-first reviewable memory for Codex",
+    "longDescription": "CP Memory 为 Codex 提供本地优先的个人记忆能力。它通过 MCP tools、skills 和 lifecycle hooks 保存并恢复项目规则、偏好、持续事项、事件、决策和会话检查点；同时提供冲突检测、纠错历史、复核队列和治理报告，帮助用户长期使用后仍然保持记忆可信。数据默认保存在 ~/.cp-memory/memory.db。 / CP Memory gives Codex a local-first personal memory layer. It uses MCP tools, skills, and lifecycle hooks to save and restore project rules, preferences, ongoing work, episodes, decisions, and conversation checkpoints. It also provides conflict detection, correction history, review queues, and governance reports so memory stays trustworthy after long-term use. Data is stored under ~/.cp-memory/memory.db by default.",
+    "developerName": "Chen Pi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "composerIcon": "./assets/logo.png",
+    "logo": "./assets/logo.png",
+    "brandColor": "#6366F1",
+    "defaultPrompt": [
+      "记住一下：这个项目的构建命令是 mvn clean install / Remember: this project's build command is mvn clean install",
+      "查一下我上次记录的发布规则 / Find the release rule I recorded last time",
+      "帮我看看当前有什么活跃任务 / Show my current active tasks"
+    ]
+  }
 }

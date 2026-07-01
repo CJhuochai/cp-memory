@@ -8,8 +8,9 @@
 
 $ErrorActionPreference = "Stop"
 $PluginName = "cp-memory"
-$PluginVersion = "1.0.21"
 $PluginSource = "$PSScriptRoot"
+$PluginManifest = Join-Path $PluginSource ".codex-plugin\plugin.json"
+$PluginVersion = (Get-Content $PluginManifest -Raw -Encoding UTF8 | ConvertFrom-Json).version
 $CodexHome = "$env:USERPROFILE\.codex"
 $AgentsHome = "$env:USERPROFILE\.agents"
 $PluginTarget = "$env:USERPROFILE\plugins\$PluginName"
