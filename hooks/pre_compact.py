@@ -1,7 +1,7 @@
 import json
 import sys
 
-from cp_memory_common import connect, emit_json, persist_checkpoint
+from cp_memory_common import connect, emit_json, persist_checkpoint, run_hook_safely
 
 
 def main():
@@ -27,5 +27,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
+    run_hook_safely("PreCompact", main)

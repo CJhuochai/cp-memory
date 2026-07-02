@@ -1,6 +1,6 @@
 import json
 
-from cp_memory_common import build_startup_context, emit_hook_context
+from cp_memory_common import build_startup_context, emit_hook_context, run_hook_safely
 
 
 def main():
@@ -12,4 +12,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_hook_safely("SessionStart", main)

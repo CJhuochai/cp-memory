@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -51,6 +52,31 @@ def connect():
     conn = get_db()
     init_db(conn)
     return conn
+
+
+def hook_log_path():
+    home = Path(os.environ.get("CP_MEMORY_HOME", str(Path(os.path.expanduser("~")) / ".cp-memory")))
+    return home / "logs" / "hooks.log"
+
+
+def log_hook_failure(hook_name, exc):
+    try:
+        path = hook_log_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(f"[{now_local()}] {hook_name} failed: {type(exc).__name__}: {exc}\n")
+            fh.write(traceback.format_exc())
+            fh.write("\n")
+    except Exception:
+        pass
+
+
+def run_hook_safely(hook_name, fn):
+    try:
+        fn()
+    except Exception as exc:
+        log_hook_failure(hook_name, exc)
+        emit_json({})
 
 
 def read_stdin_json():

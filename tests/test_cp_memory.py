@@ -1,4 +1,6 @@
 import importlib
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -250,6 +252,23 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("turn-123", row["value"])
         self.assertEqual(payload_row["content_type"], "application/json")
         self.assertIn('"trigger": "auto"', payload_row["content"])
+
+    def test_hook_safe_wrapper_logs_failure_and_returns_empty_json(self):
+        spec = importlib.util.spec_from_file_location("cp_memory_common_test", HOOKS_DIR / "cp_memory_common.py")
+        common = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(common)
+
+        def boom():
+            raise RuntimeError("simulated hook failure")
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            common.run_hook_safely("TestHook", boom)
+
+        log_path = Path(self.temp_dir) / "logs" / "hooks.log"
+        self.assertEqual(json.loads(stdout.getvalue()), {})
+        self.assertTrue(log_path.exists())
+        self.assertIn("TestHook failed: RuntimeError: simulated hook failure", log_path.read_text(encoding="utf-8"))
 
     def test_legacy_semantic_upgrade_reclassifies_and_backfills_payload(self):
         conn = self.store.get_db()

@@ -4,6 +4,7 @@ from cp_memory_common import (
     emit_json,
     extract_prompt,
     read_stdin_json,
+    run_hook_safely,
 )
 
 
@@ -18,4 +19,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_hook_safely("UserPromptSubmit", main)

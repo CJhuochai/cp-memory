@@ -6,6 +6,7 @@ from cp_memory_common import (
     persist_personal_signals,
     persist_turn_summary,
     read_stdin_json,
+    run_hook_safely,
     should_save_turn,
 )
 
@@ -29,4 +30,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_hook_safely("Stop", main)

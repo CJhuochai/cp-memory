@@ -2,6 +2,10 @@
 
 ## 中文
 
+### v1.4.1
+
+- 为生命周期 hooks 增加统一安全兜底：失败时写入本地日志并返回空结果，避免打断 Codex 使用。
+
 ### v1.4.0
 
 - 新增会话启动提醒：当存在待审阅记忆、冲突、可提炼事件或噪声候选时提示用户。
@@ -25,6 +29,10 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.4.1
+
+- Added a shared safety wrapper for lifecycle hooks: failures are logged locally and return an empty result without interrupting Codex.
 
 ### v1.4.0
 
