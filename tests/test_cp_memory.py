@@ -937,6 +937,35 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn("待确认 1", reminder)
         self.assertIn("不会自动删除记忆", reminder)
 
+    def test_review_inbox_applies_explicit_actions(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        rid, _, _ = self.store.upsert_personal_memory(
+            conn,
+            "preference",
+            "user",
+            "communication_style",
+            "用户喜欢中文结论先行。",
+            source="stop-hook-auto-extract",
+            evidence_count=1,
+            stability_score=50,
+        )
+
+        inbox = self.store.build_review_inbox(conn, subject="user", limit=5)
+        self.assertEqual(inbox["items"][0]["id"], rid)
+        self.assertIn("confirm", inbox["items"][0]["suggested_actions"])
+
+        skipped = self.store.apply_review_action(conn, rid, "skip")
+        self.assertFalse(skipped["changed"])
+
+        applied = self.store.apply_review_action(conn, rid, "confirm", reason="test review")
+        review = self.store.personal_memory_review(conn, subject="user", limit=5)
+        conn.close()
+
+        self.assertTrue(applied["changed"])
+        self.assertEqual(applied["status"], "confirmed")
+        self.assertFalse(any(item["id"] == rid for item in review["review_candidates"]))
+
     def test_maintenance_expire_does_not_delete_protected_personal_memory(self):
         conn = self.store.get_db()
         self.store.init_db(conn)

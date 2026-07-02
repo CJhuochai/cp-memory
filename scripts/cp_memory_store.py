@@ -1504,6 +1504,71 @@ def build_review_reminder(conn, subject="user", limit=10):
     )
 
 
+def build_review_inbox(conn, subject="user", limit=5):
+    review = personal_memory_review(conn, subject=subject, limit=limit)
+    items = []
+    for item in review["review_candidates"]:
+        items.append(
+            {
+                "kind": "needs_review",
+                "id": item["id"],
+                "category": item["category"],
+                "property": item["property"],
+                "value": item["value"],
+                "reason": item["reason_summary"],
+                "suggested_actions": ["confirm", "wrong", "stale", "scoped", "skip"],
+            }
+        )
+    for item in review["resolution_candidates"]:
+        winner = dict(item.get("winner_suggestion") or {})
+        items.append(
+            {
+                "kind": "conflict",
+                "id": winner.get("id", ""),
+                "property": item.get("property", ""),
+                "value": winner.get("value", ""),
+                "reason": item.get("reason_summary", ""),
+                "suggested_actions": ["review_conflict_manually", "skip"],
+                "loser_ids": item.get("loser_ids", []),
+            }
+        )
+    for item in items[: normalize_limit(limit, default=5, maximum=20)]:
+        item["prompt"] = (
+            f"记忆 `{item['id']}` 是否保留？可选：confirm / wrong / stale / scoped / skip。"
+            if item["kind"] == "needs_review"
+            else f"冲突 `{item.get('property', '')}` 需要人工合并；建议先查看 loser_ids。"
+        )
+    return {
+        "subject": clean_text(subject) or "user",
+        "pending_count": len(review["review_candidates"]) + len(review["resolution_candidates"]),
+        "items": items[: normalize_limit(limit, default=5, maximum=20)],
+        "note": "Inbox only previews and applies explicit user actions; it never auto-deletes memory.",
+    }
+
+
+def apply_review_action(conn, fact_id, action, reason="", scope=""):
+    clean_action = clean_text(action).lower()
+    if clean_action in {"confirm", "confirmed"}:
+        status = "confirmed"
+    elif clean_action in {"wrong", "stale", "scoped"}:
+        status = clean_action
+    elif clean_action == "skip":
+        return {"ok": True, "id": clean_text(fact_id), "action": "skip", "changed": False}
+    else:
+        raise ValueError(f"unsupported review action: {action}")
+    rid = correct_memory(
+        conn,
+        fact_id,
+        status,
+        reason=clean_text(reason) or f"review inbox: {status}",
+    )
+    if not rid:
+        return {"ok": False, "error": "memory not found"}
+    if status == "scoped" and clean_text(scope):
+        conn.execute("UPDATE memory_meta SET scope=?, last_reviewed_at=? WHERE fact_id=?", (clean_text(scope), now_local(), rid))
+    return {"ok": True, "id": rid, "action": clean_action, "status": status, "changed": True}
+
+
 def upsert_payload(conn, fact_id, content, content_type="text/plain"):
     ts = now_local()
     text = payload_text(content)

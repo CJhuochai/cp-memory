@@ -41,7 +41,7 @@ The goal is not to remember as much as possible. The goal is memory that remains
 - Context restore: restores relevant local-primary memory on startup and eligible prompts.
 - Automatic extraction: conservatively creates long-term personal memory candidates from explicit statements.
 - Project scope: prioritizes current-project memories with `repo:`, `project:`, and `workspace:` scopes.
-- Reviewable governance: supports review digests, conflict suggestions, correction states, and startup reminders.
+- Reviewable governance: supports review inbox, review digests, conflict suggestions, correction states, and startup reminders.
 - Safe maintenance: weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only.
 
 ![CP Memory governance loop](assets/governance-loop.svg)

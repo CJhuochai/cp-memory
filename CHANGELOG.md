@@ -2,6 +2,11 @@
 
 ## 中文
 
+### v1.5.0
+
+- 新增 `memory_review_inbox`，用小批量 Inbox 展示待审阅记忆和冲突建议。
+- 新增 `memory_review_apply`，支持显式执行 `confirm`、`wrong`、`stale`、`scoped` 或 `skip`，不物理删除记忆。
+
 ### v1.4.1
 
 - 为生命周期 hooks 增加统一安全兜底：失败时写入本地日志并返回空结果，避免打断 Codex 使用。
@@ -29,6 +34,11 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.5.0
+
+- Added `memory_review_inbox` for a small actionable queue of pending memory review items and conflict suggestions.
+- Added `memory_review_apply` for explicit `confirm`, `wrong`, `stale`, `scoped`, or `skip` actions without physically deleting memory.
 
 ### v1.4.1
 

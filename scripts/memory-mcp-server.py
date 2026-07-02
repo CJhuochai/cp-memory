@@ -8,6 +8,8 @@ from cp_memory_store import (
     build_recall_sections,
     search_codex_auxiliary_memory,
     should_use_auxiliary_memory,
+    apply_review_action,
+    build_review_inbox,
     build_restore_context,
     build_review_digest,
     CATEGORY_CHECKPOINT,
@@ -272,6 +274,30 @@ def memory_review_digest(subject: str = "user", limit: int = 10) -> str:
     digest = build_review_digest(conn, subject=subject, limit=limit)
     conn.close()
     return digest
+
+
+@mcp.tool(description="Show a small actionable inbox for pending memory review. This previews items only and never deletes memory.")
+def memory_review_inbox(subject: str = "user", limit: int = 5) -> str:
+    conn = get_db()
+    init_db(conn)
+    inbox = build_review_inbox(conn, subject=subject, limit=limit)
+    conn.close()
+    return json.dumps(inbox, ensure_ascii=False, default=str)
+
+
+@mcp.tool(description="Apply one explicit memory review action: confirm, wrong, stale, scoped, or skip. This never physically deletes memory.")
+def memory_review_apply(id: str, action: str, reason: str = "", scope: str = "") -> str:
+    conn = get_db()
+    init_db(conn)
+    try:
+        result = apply_review_action(conn, id, action, reason=reason, scope=scope)
+    except ValueError as exc:
+        conn.close()
+        return json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False)
+    if result.get("changed"):
+        conn.commit()
+    conn.close()
+    return json.dumps(result, ensure_ascii=False, default=str)
 
 
 @mcp.tool(description="Mark a memory as corrected, stale, wrong, scoped, or confirmed; optionally replace its value.")
