@@ -357,6 +357,34 @@ class CpMemoryTests(unittest.TestCase):
         self.assertGreaterEqual(len(rows), 3)
         self.assertTrue(any(row["property"].startswith("turn-summary.") for row in rows))
 
+    def test_stop_hook_does_not_duplicate_identical_history_summary(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "请总结 CP Memory 的会话摘要保存方式，以及 latest 与历史摘要分别承担什么职责。",
+                "assistant_message": "会话结束时更新 latest 摘要，并保存一份历史摘要用于后续追溯；latest 便于恢复当前状态，历史摘要用于找回之前轮次的决定和结论。",
+            },
+            ensure_ascii=False,
+        )
+        for _ in range(2):
+            subprocess.run(
+                [sys.executable, str(HOOKS_DIR / "stop.py")],
+                input=payload,
+                text=True,
+                env=env,
+                check=True,
+                capture_output=True,
+            )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        count = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM facts WHERE entity='CP Memory.CurrentConversation' AND property LIKE 'turn-summary.%'"
+        ).fetchone()["cnt"]
+        conn.close()
+
+        self.assertEqual(count, 1)
+
     def test_stop_hook_auto_extracts_personal_memory_from_explicit_turn(self):
         env = self.hook_env()
         payload = json.dumps(
@@ -418,6 +446,33 @@ class CpMemoryTests(unittest.TestCase):
         self.store.init_db(conn)
         count = conn.execute(
             "SELECT COUNT(*) AS cnt FROM facts WHERE category IN ('profile','preference','relationship','ongoing','belief_decision')"
+        ).fetchone()["cnt"]
+        conn.close()
+
+        self.assertEqual(count, 0)
+
+    def test_stop_hook_does_not_extract_assistant_proposed_user_memory(self):
+        env = self.hook_env()
+        payload = json.dumps(
+            {
+                "prompt": "那你准备怎么改自动提炼？",
+                "assistant_message": "我会把“用户喜欢中文、结论先行”这类句子作为候选，并增加代码片段过滤。",
+            },
+            ensure_ascii=False,
+        )
+        subprocess.run(
+            [sys.executable, str(HOOKS_DIR / "stop.py")],
+            input=payload,
+            text=True,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        count = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM facts WHERE category IN ('profile','preference','relationship','ongoing','belief_decision','episode')"
         ).fetchone()["cnt"]
         conn.close()
 

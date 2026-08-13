@@ -599,27 +599,34 @@ def persist_turn_summary(conn, prompt, assistant):
         },
         content_type="application/json",
     )
-    history_id, _ = upsert_fact(
-        conn,
-        "CP Memory.CurrentConversation",
-        unique_property(SUMMARY_HISTORY_PREFIX),
-        value,
-        tags=",".join(tags + ["history"]),
-        category=CATEGORY_SUMMARY,
-        importance=importance,
-        expires_at=expiry_for_importance(importance),
-        source="stop-hook-history",
-        summary_type="turn",
-        payload={
-            "prompt": prompt,
-            "assistant": assistant,
-            "summary": value,
-            "topics": topics,
-            "importance": importance,
-            "task": {"id": task["id"], "name": task["property"]} if task else None,
-        },
-        content_type="application/json",
-    )
+    history = conn.execute(
+        "SELECT id FROM facts WHERE entity=? AND category=? AND property LIKE ? AND value=? ORDER BY updated_at DESC LIMIT 1",
+        ("CP Memory.CurrentConversation", CATEGORY_SUMMARY, f"{SUMMARY_HISTORY_PREFIX}%", value),
+    ).fetchone()
+    if history:
+        history_id = history["id"]
+    else:
+        history_id, _ = upsert_fact(
+            conn,
+            "CP Memory.CurrentConversation",
+            unique_property(SUMMARY_HISTORY_PREFIX),
+            value,
+            tags=",".join(tags + ["history"]),
+            category=CATEGORY_SUMMARY,
+            importance=importance,
+            expires_at=expiry_for_importance(importance),
+            source="stop-hook-history",
+            summary_type="turn",
+            payload={
+                "prompt": prompt,
+                "assistant": assistant,
+                "summary": value,
+                "topics": topics,
+                "importance": importance,
+                "task": {"id": task["id"], "name": task["property"]} if task else None,
+            },
+            content_type="application/json",
+        )
     if task:
         link_records(conn, "fact", rid, "about_task", "fact", task["id"])
         link_records(conn, "fact", history_id, "about_task", "fact", task["id"])
@@ -627,8 +634,8 @@ def persist_turn_summary(conn, prompt, assistant):
 
 
 def persist_personal_signals(conn, prompt, assistant, summary_id=""):
-    candidates = extract_personal_candidates(prompt, assistant)
-    decision_candidates = extract_decision_candidates(prompt, assistant)
+    candidates = extract_personal_candidates(prompt, "")
+    decision_candidates = extract_decision_candidates(prompt, "")
     if not candidates and not decision_candidates:
         return {"episode_id": "", "created": []}
     episode_text = meaningful_text(f"{prompt} {assistant}", 240)
