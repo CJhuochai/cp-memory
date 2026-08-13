@@ -2,6 +2,12 @@
 
 ## 中文
 
+### v1.6.0
+
+- Stop hook 对相同的历史会话摘要去重，重复触发不再新增历史记录。
+- 自动长期记忆只从用户输入提炼；助手的方案、示例和代码解释不再被误记为用户记忆。
+- 无需迁移或清理既有数据；新规则只影响后续自动写入。
+
 ### v1.5.0
 
 - 新增 `memory_review_inbox`，用小批量 Inbox 展示待审阅记忆和冲突建议。
@@ -34,6 +40,12 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.6.0
+
+- Deduplicated identical historical turn summaries in the stop hook, so repeated triggers no longer create extra history records.
+- Automatic long-term memory extraction now uses user input only; assistant proposals, examples, and code explanations are not recorded as user memories.
+- No migration or cleanup is required; the new rules affect future automatic writes only.
 
 ### v1.5.0
 
