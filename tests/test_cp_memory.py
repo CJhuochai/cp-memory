@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import contextlib
 import io
@@ -82,6 +83,7 @@ class CpMemoryTests(unittest.TestCase):
         server = mcp["mcpServers"]["cp-memory-server"]
         self.assertEqual(server["command"], "python")
         self.assertEqual(server["args"], ["scripts/memory-mcp-server.py"])
+        self.assertEqual(server["cwd"], ".")
         self.assertFalse(any("C:\\Users" in arg for arg in server["args"]))
 
         marketplace = json.loads(MARKETPLACE_CONFIG.read_text(encoding="utf-8"))
@@ -92,6 +94,33 @@ class CpMemoryTests(unittest.TestCase):
         manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
+
+    def test_packaged_mcp_starts_from_plugin_root_and_lists_memory_tools(self):
+        from mcp import ClientSession, StdioServerParameters
+        from mcp.client.stdio import stdio_client
+
+        with tempfile.TemporaryDirectory(prefix="cp-memory plugin ") as install_dir:
+            installed_plugin = Path(install_dir)
+            shutil.copy2(MCP_CONFIG, installed_plugin / ".mcp.json")
+            shutil.copytree(SCRIPTS_DIR, installed_plugin / "scripts")
+            server = json.loads((installed_plugin / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"][
+                "cp-memory-server"
+            ]
+            params = StdioServerParameters(
+                command=server["command"],
+                args=server["args"],
+                cwd=(installed_plugin / server["cwd"]).resolve(),
+                env=self.hook_env(),
+            )
+
+            async def list_tool_names():
+                async with stdio_client(params) as (read_stream, write_stream):
+                    async with ClientSession(read_stream, write_stream) as session:
+                        await session.initialize()
+                        return {tool.name for tool in (await session.list_tools()).tools}
+
+            tool_names = asyncio.run(list_tool_names())
+            self.assertTrue({"memory_recall", "memory_search", "memory_probe"}.issubset(tool_names))
 
     def test_install_keeps_global_hooks_config_untouched_and_does_not_copy_hook_scripts(self):
         temp_profile = Path(tempfile.mkdtemp(prefix="cp-memory-install-"))

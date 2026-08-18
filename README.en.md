@@ -75,6 +75,10 @@ codex plugin add cp-memory@cp-memory
 
 Restart Codex after installation. If Codex asks you to trust hooks, approve the CP Memory lifecycle hooks in the hooks view.
 
+## Platform Support
+
+Windows is the currently supported and verified platform. macOS and Linux are not yet part of the release validation or current support scope.
+
 ## Safety
 
 - Do not commit your real `memory.db`, logs, private summaries, or environment files.

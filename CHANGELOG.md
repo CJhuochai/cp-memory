@@ -2,6 +2,13 @@
 
 ## 中文
 
+### v1.6.1
+
+- 修复插件 MCP 服务器未设置工作目录的问题，确保从任意项目目录启动 Codex 时都能加载 `memory_*` 工具。
+- 新增真实 MCP 初始化与工具列表回归测试，并覆盖带空格的插件安装路径。
+- 明确当前正式支持并验证 Windows；本次补丁不扩展 macOS/Linux 支持。
+- 无需迁移或修改既有 `memory.db`。
+
 ### v1.6.0
 
 - Stop hook 对相同的历史会话摘要去重，重复触发不再新增历史记录。
@@ -40,6 +47,13 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.6.1
+
+- Fixed the missing working directory for the bundled MCP server so Codex can load `memory_*` tools from any project directory.
+- Added a real MCP initialization and tool-list regression test, including a plugin installation path with spaces.
+- Clarified that Windows is the currently supported and verified platform; this patch does not add macOS/Linux support.
+- No migration or change to an existing `memory.db` is required.
 
 ### v1.6.0
 

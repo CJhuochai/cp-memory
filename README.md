@@ -75,6 +75,10 @@ codex plugin add cp-memory@cp-memory
 
 安装后重启 Codex。如果 Codex 提示信任 hooks，请在 hooks 页面确认 CP Memory 的生命周期 hooks。
 
+## 平台支持
+
+当前正式支持并验证 Windows。macOS 和 Linux 尚未纳入发布验证，不在当前支持范围内。
+
 ## 安全边界
 
 - 不要提交真实 `memory.db`、日志、私人摘要或环境文件。
