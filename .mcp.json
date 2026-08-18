@@ -3,7 +3,8 @@
     "cp-memory-server": {
       "type": "stdio",
       "command": "python",
-      "args": ["scripts/memory-mcp-server.py"]
+      "args": ["scripts/memory-mcp-server.py"],
+      "cwd": "."
     }
   }
 }
