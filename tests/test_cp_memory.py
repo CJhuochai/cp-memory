@@ -54,7 +54,8 @@ class CpMemoryTests(unittest.TestCase):
 
     def test_plugin_manifest_declares_hook_bundle_with_legacy_contract(self):
         manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
-        self.assertIn("hooks", manifest)
+        self.assertEqual(manifest["hooks"], "./hooks.json")
+        self.assertFalse((HOOKS_DIR / "claude-codex-hooks.json").exists())
 
         hook_bundle = (PLUGIN_HOME / manifest["hooks"]).resolve()
         hook_config = json.loads(hook_bundle.read_text(encoding="utf-8"))
@@ -111,7 +112,7 @@ class CpMemoryTests(unittest.TestCase):
         self.assertNotIn('\\\\', installer)
 
     def test_posix_hooks_prefer_python3(self):
-        hooks = json.loads((HOOKS_DIR / "claude-codex-hooks.json").read_text(encoding="utf-8"))["hooks"]
+        hooks = json.loads((PLUGIN_HOME / "hooks.json").read_text(encoding="utf-8"))["hooks"]
         for entries in hooks.values():
             command = entries[0]["hooks"][0]["command"]
             self.assertIn("command -v python3", command)

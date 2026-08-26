@@ -60,7 +60,7 @@ try {
     $automationFile = Join-Path $TempProfile ".codex\automations\cp-memory-weekly-maintenance\automation.toml"
 
     Assert-PathExists (Join-Path $installedRoot ".codex-plugin\plugin.json")
-    Assert-PathExists (Join-Path $installedRoot "hooks\claude-codex-hooks.json")
+    Assert-PathExists (Join-Path $installedRoot "hooks.json")
     Assert-PathExists (Join-Path $cacheRoot ".codex-plugin\plugin.json")
     Assert-PathExists (Join-Path $cacheRoot ".mcp.json")
     Assert-PathExists $automationFile
