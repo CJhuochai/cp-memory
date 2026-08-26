@@ -22,6 +22,7 @@ POSIX_INSTALL_SCRIPT = PLUGIN_HOME / "install.sh"
 POSIX_INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.sh"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
+REQUIREMENTS_FILE = PLUGIN_HOME / "requirements.txt"
 
 
 def load_store(temp_home):
@@ -105,6 +106,11 @@ class CpMemoryTests(unittest.TestCase):
         self.assertIn('python3', installer)
         self.assertNotIn('USERPROFILE', installer)
         self.assertNotIn('\\\\', installer)
+
+    def test_runtime_dependencies_declare_mcp(self):
+        self.assertTrue(REQUIREMENTS_FILE.exists())
+        requirements = REQUIREMENTS_FILE.read_text(encoding="utf-8")
+        self.assertRegex(requirements, r"(?m)^mcp(?:[<>=!~].*)?$")
 
     def test_packaged_mcp_starts_from_plugin_root_and_lists_memory_tools(self):
         from mcp import ClientSession, StdioServerParameters
