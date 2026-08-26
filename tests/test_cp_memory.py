@@ -18,8 +18,11 @@ HOOKS_DIR = PLUGIN_HOME / "hooks"
 PLUGIN_MANIFEST = PLUGIN_HOME / ".codex-plugin" / "plugin.json"
 INSTALL_SCRIPT = PLUGIN_HOME / "install.ps1"
 INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.ps1"
+POSIX_INSTALL_SCRIPT = PLUGIN_HOME / "install.sh"
+POSIX_INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.sh"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
+REQUIREMENTS_FILE = PLUGIN_HOME / "requirements.txt"
 
 
 def load_store(temp_home):
@@ -95,6 +98,29 @@ class CpMemoryTests(unittest.TestCase):
         self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
 
+    def test_posix_installer_uses_home_and_python3_without_windows_paths(self):
+        self.assertTrue(POSIX_INSTALL_SCRIPT.exists())
+        self.assertTrue(POSIX_INSTALL_TEST_SCRIPT.exists())
+        installer = POSIX_INSTALL_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('${HOME}/plugins', installer)
+        self.assertIn('python3', installer)
+        self.assertIn('runtime_python="$plugin_target/.venv/bin/python"', installer)
+        self.assertIn('"$runtime_python" -m pip install -r "$plugin_target/requirements.txt"', installer)
+        self.assertIn('"$python_bin" - "$plugin_target/.mcp.json" "$runtime_python"', installer)
+        self.assertNotIn('USERPROFILE', installer)
+        self.assertNotIn('\\\\', installer)
+
+    def test_posix_hooks_prefer_python3(self):
+        hooks = json.loads((HOOKS_DIR / "claude-codex-hooks.json").read_text(encoding="utf-8"))["hooks"]
+        for entries in hooks.values():
+            command = entries[0]["hooks"][0]["command"]
+            self.assertIn("command -v python3", command)
+
+    def test_runtime_dependencies_declare_mcp(self):
+        self.assertTrue(REQUIREMENTS_FILE.exists())
+        requirements = REQUIREMENTS_FILE.read_text(encoding="utf-8")
+        self.assertRegex(requirements, r"(?m)^mcp(?:[<>=!~].*)?$")
+
     def test_packaged_mcp_starts_from_plugin_root_and_lists_memory_tools(self):
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
@@ -122,6 +148,7 @@ class CpMemoryTests(unittest.TestCase):
             tool_names = asyncio.run(list_tool_names())
             self.assertTrue({"memory_recall", "memory_search", "memory_probe"}.issubset(tool_names))
 
+    @unittest.skipUnless(sys.platform == "win32", "Windows PowerShell installer test")
     def test_install_keeps_global_hooks_config_untouched_and_does_not_copy_hook_scripts(self):
         temp_profile = Path(tempfile.mkdtemp(prefix="cp-memory-install-"))
         try:
@@ -185,6 +212,7 @@ class CpMemoryTests(unittest.TestCase):
                     str(INSTALL_SCRIPT),
                 ],
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
                 check=True,
                 env=env,
@@ -265,6 +293,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "pre_compact.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -367,6 +396,7 @@ class CpMemoryTests(unittest.TestCase):
                 [sys.executable, str(HOOKS_DIR / "stop.py")],
                 input=payload,
                 text=True,
+                encoding="utf-8",
                 env=env,
                 check=True,
                 capture_output=True,
@@ -400,6 +430,7 @@ class CpMemoryTests(unittest.TestCase):
                 [sys.executable, str(HOOKS_DIR / "stop.py")],
                 input=payload,
                 text=True,
+                encoding="utf-8",
                 env=env,
                 check=True,
                 capture_output=True,
@@ -427,6 +458,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -466,6 +498,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -493,6 +526,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -520,6 +554,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -562,6 +597,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -589,6 +625,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -610,6 +647,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "user_prompt_submit.py")],
             input=json.dumps({"prompt": "帮我写一个 hello world"}, ensure_ascii=False),
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -647,6 +685,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "user_prompt_submit.py")],
             input=json.dumps({"prompt": "我们上次说到哪了，继续"}, ensure_ascii=False),
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,
@@ -1264,6 +1303,7 @@ class CpMemoryTests(unittest.TestCase):
             [sys.executable, str(HOOKS_DIR / "stop.py")],
             input=payload,
             text=True,
+            encoding="utf-8",
             env=env,
             check=True,
             capture_output=True,

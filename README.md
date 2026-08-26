@@ -77,7 +77,7 @@ codex plugin add cp-memory@cp-memory
 
 ## 平台支持
 
-当前正式支持并验证 Windows。macOS 和 Linux 尚未纳入发布验证，不在当前支持范围内。
+当前正式支持并验证 Windows。macOS 和 Linux 的本地安装器与 CI 验证正在补齐；在三平台验证全部通过前，不提前承诺正式支持。
 
 ## 安全边界
 
@@ -100,6 +100,15 @@ codex plugin add cp-memory@cp-memory
 ## 本地开发
 
 普通用户不需要运行 `install.ps1`。它主要用于本地开发、刷新 personal marketplace 缓存，以及迁移旧版本留下的全局 hook 接线。
+
+macOS/Linux 本地开发可运行：
+
+```sh
+sh ./install.sh
+sh ./scripts/test-install.sh
+```
+
+需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖。推荐普通用户继续通过上面的 GitHub marketplace 安装。
 
 运行测试：
 
