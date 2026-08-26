@@ -28,7 +28,7 @@ CP Memory 更适合：
 ## 当前不足
 
 - 还没有图形化审阅界面。
-- README 和示例仍在完善中。
+- macOS/Linux 的真实 Codex 桌面端 Hook 注入尚待设备到位后的手工冒烟。
 - 主要体验围绕 Codex，其他客户端不是优先目标。
 - 自动提炼刻意保守，所以不会把所有聊天内容都变成长期记忆。
 
@@ -60,6 +60,6 @@ If you only need a simple note store or generic vector search, CP Memory may be 
 ## Current Gaps
 
 - No graphical review UI yet.
-- README and examples are still improving.
+- Manual real-Codex-desktop Hook-injection testing on macOS/Linux still awaits suitable devices.
 - The main experience targets Codex; other clients are not the priority.
 - Automatic extraction is intentionally conservative, so it will not turn every chat message into long-term memory.
