@@ -18,6 +18,8 @@ HOOKS_DIR = PLUGIN_HOME / "hooks"
 PLUGIN_MANIFEST = PLUGIN_HOME / ".codex-plugin" / "plugin.json"
 INSTALL_SCRIPT = PLUGIN_HOME / "install.ps1"
 INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.ps1"
+POSIX_INSTALL_SCRIPT = PLUGIN_HOME / "install.sh"
+POSIX_INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.sh"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
 
@@ -94,6 +96,15 @@ class CpMemoryTests(unittest.TestCase):
         manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
+
+    def test_posix_installer_uses_home_and_python3_without_windows_paths(self):
+        self.assertTrue(POSIX_INSTALL_SCRIPT.exists())
+        self.assertTrue(POSIX_INSTALL_TEST_SCRIPT.exists())
+        installer = POSIX_INSTALL_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('${HOME}/plugins', installer)
+        self.assertIn('python3', installer)
+        self.assertNotIn('USERPROFILE', installer)
+        self.assertNotIn('\\\\', installer)
 
     def test_packaged_mcp_starts_from_plugin_root_and_lists_memory_tools(self):
         from mcp import ClientSession, StdioServerParameters

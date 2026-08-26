@@ -77,7 +77,7 @@ Restart Codex after installation. If Codex asks you to trust hooks, approve the 
 
 ## Platform Support
 
-Windows is the currently supported and verified platform. macOS and Linux are not yet part of the release validation or current support scope.
+Windows is the currently supported and verified platform. The local installer and CI validation for macOS and Linux are being added; do not treat them as officially supported until the full matrix passes.
 
 ## Safety
 
@@ -100,6 +100,15 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 ## Local Development
 
 Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
+
+For local macOS/Linux development, run:
+
+```sh
+sh ./install.sh
+sh ./scripts/test-install.sh
+```
+
+Python 3 with `python3` on PATH is required. Regular users should continue to use the GitHub marketplace installation above.
 
 Run the test suite:
 
