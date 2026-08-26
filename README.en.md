@@ -5,7 +5,7 @@
 <h1 align="center">CP Memory</h1>
 
 <p align="center">
-  A local-first, reviewable memory layer for Codex: remember useful context, explain why, and correct bad memory safely.
+  Help Codex keep project rules across sessions: local storage, relevant restore, explainable memory, and safe correction.
 </p>
 
 <p align="center">
@@ -20,6 +20,12 @@
 </p>
 
 ---
+
+## See The Result In 30 Seconds
+
+1. Tell Codex a project rule, such as: “Releases must start on a branch, run tests, and merge through a PR.”
+2. In a later session, CP Memory restores the relevant rule from the local primary store so Codex can continue following it.
+3. If the rule is wrong, preserve correction history and mark the old record wrong, stale, or scoped instead of silently overwriting it.
 
 CP Memory is a local-first memory plugin for Codex. It stores facts, preferences, ongoing work, episodes, decisions, and conversation checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
 
@@ -65,6 +71,8 @@ CP Memory restores the relevant memory from the local primary store first, and C
 
 See more anonymized examples in [docs/examples.md](docs/examples.md).
 
+For a GIF, short video, or launch post, use the sanitized [30-second demo script](docs/30-second-demo.md).
+
 ## Install
 
 For Windows, the recommended path is GitHub Marketplace installation:
@@ -100,7 +108,7 @@ Manual smoke testing of real Codex desktop Hook injection on macOS/Linux is stil
 
 - Do not commit your real `memory.db`, logs, private summaries, or environment files.
 - Automatic extraction is intentionally conservative. Generated memories can be reviewed, corrected, marked stale, or marked wrong.
-- New sessions show a reminder when memories need review, but they do not auto-delete memory or auto-resolve conflicts.
+- When memories need review, the current version injects a reminder into assistant context. It is not a user-facing popup or visible review panel, and it does not auto-delete memory or auto-resolve conflicts.
 - Weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only; long-term personal memories, tasks, and decisions are protected by default.
 - Examples and screenshots use sanitized content, so you do not need to expose your real memory database.
 
