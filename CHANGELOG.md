@@ -2,6 +2,11 @@
 
 ## 中文
 
+### v1.7.2
+
+- 修复公开 Marketplace 的仓库内插件定位：marketplace 清单改用 `source: "local"` 与根目录路径 `"."`。
+- 这与 Marketplace 已克隆仓库后解析插件的方式一致；普通用户的 GitHub 安装命令无需改变。
+
 ### v1.7.1
 
 - 修复公开 Marketplace 兼容性：插件 hooks 清单改为标准根目录 `hooks.json`。
@@ -60,6 +65,11 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.7.2
+
+- Fixed public Marketplace plugin resolution inside the cloned repository: the marketplace manifest now uses `source: "local"` and the root path `"."`.
+- This matches the Marketplace's cloned-repository resolution model; the normal GitHub installation command is unchanged.
 
 ### v1.7.1
 

@@ -93,8 +93,7 @@ class CpMemoryTests(unittest.TestCase):
         marketplace = json.loads(MARKETPLACE_CONFIG.read_text(encoding="utf-8"))
         plugin = marketplace["plugins"][0]
         self.assertEqual(plugin["name"], "cp-memory")
-        self.assertEqual(plugin["source"]["source"], "url")
-        self.assertIn("github.com", plugin["source"]["url"])
+        self.assertEqual(plugin["source"], {"source": "local", "path": "."})
         manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
