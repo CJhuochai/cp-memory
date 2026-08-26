@@ -1,6 +1,6 @@
 {
   "name": "cp-memory",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：通过 MCP、生命周期 hooks 和治理工具恢复可信上下文。 / CP Memory is a local-first, reviewable memory layer for Codex: restore trustworthy context through MCP, lifecycle hooks, and governance tools.",
   "author": {
     "name": "Chen Jian"
@@ -21,7 +21,7 @@
     "cp-memory"
   ],
   "skills": "./skills/",
-  "hooks": "./hooks/claude-codex-hooks.json",
+  "hooks": "./hooks.json",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "CP Memory",

@@ -2,6 +2,12 @@
 
 ## 中文
 
+### v1.7.1
+
+- 修复公开 Marketplace 兼容性：插件 hooks 清单改为标准根目录 `hooks.json`。
+- 移除重复的非标准 hooks 清单，避免两个配置入口发生漂移。
+- 无需迁移既有 `memory.db`；Windows、macOS/Linux 的 hook 脚本路径保持不变。
+
 ### v1.7.0
 
 - 新增 macOS/Linux 源码安装器 `install.sh`，使用 `python3` 创建插件私有运行环境并安装 MCP 依赖。
@@ -54,6 +60,12 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.7.1
+
+- Fixed public Marketplace compatibility: the plugin hooks manifest now uses the standard root-level `hooks.json`.
+- Removed the duplicate non-standard hooks manifest to prevent configuration drift.
+- No existing `memory.db` migration is required; hook script paths remain unchanged on Windows and macOS/Linux.
 
 ### v1.7.0
 
