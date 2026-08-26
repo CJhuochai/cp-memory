@@ -30,7 +30,7 @@ git switch -c docs/product-positioning-examples
 CP Memory 的重点不是尽可能多地记住，而是让长期记忆可解释、可审阅、可纠错。
 ```
 
-后续编写 README、插件描述和对比文档时，Codex 会优先围绕这个定位组织内容，而不是把它包装成另一个通用 SQLite memory server。
+维护 README、插件描述和对比文档时，Codex 会优先围绕这个定位组织内容，而不是把它包装成另一个通用 SQLite memory server。
 
 价值：产品方向可以跨会话延续，避免每次重新讨论定位。
 
@@ -93,7 +93,7 @@ During development, the project established this positioning:
 CP Memory is not about remembering as much as possible. It is about making long-term memory explainable, reviewable, and correctable.
 ```
 
-When writing the README, plugin description, and comparison docs later, Codex can organize the content around that positioning instead of presenting CP Memory as just another SQLite memory server.
+When maintaining the README, plugin description, and comparison docs, Codex can organize the content around that positioning instead of presenting CP Memory as just another SQLite memory server.
 
 Value: product direction carries across sessions instead of being rediscovered each time.
 

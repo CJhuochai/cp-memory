@@ -16,11 +16,12 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
   <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
+  <img alt="CI: Windows macOS Linux" src="https://img.shields.io/badge/CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg">
 </p>
 
 ---
 
-CP Memory 是一个面向 Codex 的本地记忆插件。它把事实、偏好、持续事项、事件、决策和会话检查点保存到本地 SQLite 数据库，再通过 MCP 工具和生命周期 hooks 在合适的时机恢复上下文。
+CP Memory 是一个面向 Codex 的本地优先记忆插件。它把事实、偏好、持续事项、事件、决策和会话检查点保存到本地 SQLite 数据库，再通过 MCP 工具和生命周期 hooks 在合适的时机恢复上下文。
 
 它的重点不是“尽可能多地记住”，而是“长期使用后仍然可信”：可解释、可审阅、可纠错、可治理。
 
@@ -66,7 +67,7 @@ CP Memory 会优先从本地主库恢复相关记忆，并让 Codex 按这条规
 
 ## 安装
 
-推荐通过 GitHub marketplace 安装：
+Windows 推荐通过 GitHub Marketplace 安装：
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
@@ -75,9 +76,25 @@ codex plugin add cp-memory@cp-memory
 
 安装后重启 Codex。如果 Codex 提示信任 hooks，请在 hooks 页面确认 CP Memory 的生命周期 hooks。
 
+macOS/Linux 请使用源码安装器；它会创建插件私有 Python 运行环境并安装 MCP 依赖：
+
+```sh
+git clone https://github.com/CJhuochai/cp-memory.git
+cd cp-memory
+sh ./install.sh
+```
+
+完成后重启 Codex。不要把 macOS/Linux 的 GitHub Marketplace 安装当作已验证的等价路径：Marketplace 不会自动运行 `install.sh`，因而不会创建该私有运行环境。
+
 ## 平台支持
 
-当前正式支持并验证 Windows。macOS 和 Linux 的本地安装器与 CI 验证正在补齐；在三平台验证全部通过前，不提前承诺正式支持。
+| 平台 | 推荐安装路径 | 已验证范围 |
+| --- | --- | --- |
+| Windows | GitHub Marketplace；本地开发可用 `install.ps1` | 单元测试、隔离安装验证和 GitHub Actions CI 均通过 |
+| macOS | 源码安装器 `sh ./install.sh` | GitHub Actions macOS CI：单元测试与隔离安装/MCP 启动验证通过 |
+| Linux | 源码安装器 `sh ./install.sh` | GitHub Actions Ubuntu CI：单元测试与隔离安装/MCP 启动验证通过 |
+
+macOS/Linux 的真实 Codex 桌面端 Hook 注入尚未在实体设备上手工冒烟；当前发布依据是三端 CI。这个边界不影响已覆盖的安装器和 MCP 启动验证，但不应被表述为完整桌面端手工验收。
 
 ## 安全边界
 
@@ -99,7 +116,7 @@ codex plugin add cp-memory@cp-memory
 
 ## 本地开发
 
-普通用户不需要运行 `install.ps1`。它主要用于本地开发、刷新 personal marketplace 缓存，以及迁移旧版本留下的全局 hook 接线。
+Windows 普通用户通常不需要运行 `install.ps1`。它主要用于本地开发、刷新 personal marketplace 缓存，以及迁移旧版本留下的全局 hook 接线。
 
 macOS/Linux 本地开发可运行：
 
@@ -108,7 +125,7 @@ sh ./install.sh
 sh ./scripts/test-install.sh
 ```
 
-需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖。推荐普通用户继续通过上面的 GitHub marketplace 安装。
+需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖；这是 macOS/Linux 当前已验证的安装路径。
 
 运行测试：
 

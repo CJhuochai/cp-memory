@@ -1,7 +1,7 @@
 {
   "name": "cp-memory",
   "version": "1.7.0",
-  "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：记住重要上下文，解释为什么记住，并允许安全纠错。 / CP Memory is a local-first, reviewable memory layer for Codex: remember useful context, explain why, and correct bad memory safely.",
+  "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：通过 MCP、生命周期 hooks 和治理工具恢复可信上下文。 / CP Memory is a local-first, reviewable memory layer for Codex: restore trustworthy context through MCP, lifecycle hooks, and governance tools.",
   "author": {
     "name": "Chen Jian"
   },
@@ -10,9 +10,14 @@
   "license": "MIT",
   "keywords": [
     "memory",
-    "knowledge",
-    "facts",
+    "codex",
+    "codex-plugin",
     "mcp",
+    "sqlite",
+    "local-first",
+    "agent-memory",
+    "memory-governance",
+    "cross-platform",
     "cp-memory"
   ],
   "skills": "./skills/",
@@ -20,8 +25,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "CP Memory",
-    "shortDescription": "本地优先的 Codex 可审阅记忆层 / Local-first reviewable memory for Codex",
-    "longDescription": "CP Memory 为 Codex 提供本地优先的个人记忆能力。它通过 MCP tools、skills 和 lifecycle hooks 保存并恢复项目规则、偏好、持续事项、事件、决策和会话检查点；同时提供冲突检测、纠错历史、复核队列和治理报告，帮助用户长期使用后仍然保持记忆可信。数据默认保存在 ~/.cp-memory/memory.db。 / CP Memory gives Codex a local-first personal memory layer. It uses MCP tools, skills, and lifecycle hooks to save and restore project rules, preferences, ongoing work, episodes, decisions, and conversation checkpoints. It also provides conflict detection, correction history, review queues, and governance reports so memory stays trustworthy after long-term use. Data is stored under ~/.cp-memory/memory.db by default.",
+    "shortDescription": "本地优先、可治理的 Codex 记忆层 / Local-first, governable memory for Codex",
+    "longDescription": "CP Memory 为 Codex 提供本地优先、可审阅的个人记忆能力。它通过 MCP tools、skills 和 lifecycle hooks 保存并恢复项目规则、偏好、持续事项、事件、决策和会话检查点；同时提供冲突检测、纠错历史、复核队列和治理报告，帮助用户长期使用后仍然保持记忆可信。数据默认保存在 ~/.cp-memory/memory.db。Windows 可通过 GitHub Marketplace 安装；macOS/Linux 当前使用带私有 Python 运行环境的源码安装器。 / CP Memory gives Codex a local-first, reviewable personal memory layer. It uses MCP tools, skills, and lifecycle hooks to save and restore project rules, preferences, ongoing work, episodes, decisions, and conversation checkpoints. It also provides conflict detection, correction history, review queues, and governance reports so memory stays trustworthy after long-term use. Data is stored under ~/.cp-memory/memory.db by default. Windows can use GitHub Marketplace; macOS/Linux currently use the source installer with a private Python runtime.",
     "developerName": "Chen Pi",
     "category": "Productivity",
     "websiteURL": "https://github.com/CJhuochai/cp-memory",

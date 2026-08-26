@@ -16,11 +16,12 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
   <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
+  <img alt="CI: Windows macOS Linux" src="https://img.shields.io/badge/CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg">
 </p>
 
 ---
 
-CP Memory is a local memory plugin for Codex. It stores facts, preferences, ongoing work, episodes, decisions, and conversation checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
+CP Memory is a local-first memory plugin for Codex. It stores facts, preferences, ongoing work, episodes, decisions, and conversation checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
 
 The goal is not to remember as much as possible. The goal is memory that remains trustworthy after long-term use: explainable, reviewable, correctable, and governable.
 
@@ -66,7 +67,7 @@ See more anonymized examples in [docs/examples.md](docs/examples.md).
 
 ## Install
 
-The recommended path is GitHub marketplace installation:
+For Windows, the recommended path is GitHub Marketplace installation:
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
@@ -75,9 +76,25 @@ codex plugin add cp-memory@cp-memory
 
 Restart Codex after installation. If Codex asks you to trust hooks, approve the CP Memory lifecycle hooks in the hooks view.
 
+For macOS/Linux, use the source installer. It creates a private Python runtime for the plugin and installs the MCP dependency:
+
+```sh
+git clone https://github.com/CJhuochai/cp-memory.git
+cd cp-memory
+sh ./install.sh
+```
+
+Restart Codex when it finishes. Do not treat GitHub Marketplace installation on macOS/Linux as an equivalently verified path: Marketplace does not run `install.sh`, so it does not create that private runtime.
+
 ## Platform Support
 
-Windows is the currently supported and verified platform. The local installer and CI validation for macOS and Linux are being added; do not treat them as officially supported until the full matrix passes.
+| Platform | Recommended installation | Verified coverage |
+| --- | --- | --- |
+| Windows | GitHub Marketplace; `install.ps1` for local development | Unit tests, isolated installation validation, and GitHub Actions CI passed |
+| macOS | Source installer: `sh ./install.sh` | GitHub Actions macOS CI passed unit tests and isolated install/MCP startup validation |
+| Linux | Source installer: `sh ./install.sh` | GitHub Actions Ubuntu CI passed unit tests and isolated install/MCP startup validation |
+
+Manual smoke testing of real Codex desktop Hook injection on macOS/Linux is still pending access to physical devices. This release is accepted through three-platform CI; the boundary does not affect the installer and MCP-startup checks already covered, but it is not a substitute for full desktop manual acceptance.
 
 ## Safety
 
@@ -99,7 +116,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## Local Development
 
-Regular users do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
+Windows users normally do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
 
 For local macOS/Linux development, run:
 
@@ -108,7 +125,7 @@ sh ./install.sh
 sh ./scripts/test-install.sh
 ```
 
-Python 3 with `python3` on PATH is required. The installer creates a private virtual environment in the plugin directory and installs runtime dependencies. Regular users should continue to use the GitHub marketplace installation above.
+Python 3 with `python3` on PATH is required. The installer creates a private virtual environment in the plugin directory and installs runtime dependencies; this is the currently verified installation path for macOS/Linux.
 
 Run the test suite:
 

@@ -6,8 +6,8 @@
 
 ### 近期
 
-- 强化 hook 失败兜底：失败时写入本地日志，但不打断 Codex 正常使用。
-- 完善升级说明，帮助用户从旧本地安装迁移到 GitHub marketplace 安装。
+- 在取得设备后完成 macOS/Linux 真实 Codex 桌面端 Hook 注入手工冒烟。
+- 研究让 GitHub Marketplace 在 POSIX 也能自动准备插件私有运行环境的最小兼容方案。
 - 增加更多脱敏示例，展示真实使用中的恢复、纠错和审阅流程。
 
 ### 中期
@@ -35,8 +35,8 @@ This roadmap describes possible directions for CP Memory. It is not a promise li
 
 ### Near Term
 
-- Harden hook failure handling: write local logs on failure without interrupting normal Codex usage.
-- Improve upgrade docs for users moving from older local installs to GitHub marketplace installation.
+- Complete manual real-Codex-desktop Hook-injection smoke testing on macOS/Linux when devices are available.
+- Investigate the smallest compatible way for GitHub Marketplace to provision the private plugin runtime on POSIX.
 - Add more sanitized examples showing real recall, correction, and review flows.
 
 ### Mid Term

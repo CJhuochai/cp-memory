@@ -2,6 +2,13 @@
 
 ## 中文
 
+### v1.7.0
+
+- 新增 macOS/Linux 源码安装器 `install.sh`，使用 `python3` 创建插件私有运行环境并安装 MCP 依赖。
+- Hooks 在 POSIX 优先使用 `python3`，Windows 保留 `python` / `py -3` 兼容路径。
+- 新增 Windows、macOS、Ubuntu CI；三端均覆盖单元测试，macOS/Linux 额外覆盖隔离安装和 MCP 启动。
+- 真实 macOS/Linux Codex 桌面端 Hook 注入手工冒烟仍待补测；无需迁移既有 `memory.db`。
+
 ### v1.6.1
 
 - 修复插件 MCP 服务器未设置工作目录的问题，确保从任意项目目录启动 Codex 时都能加载 `memory_*` 工具。
@@ -47,6 +54,13 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.7.0
+
+- Added the macOS/Linux source installer `install.sh`, which uses `python3` to create a private plugin runtime and install MCP dependencies.
+- Hooks prefer `python3` on POSIX while Windows retains `python` / `py -3` compatibility.
+- Added Windows, macOS, and Ubuntu CI. All three run unit tests; macOS/Linux also run isolated installation and MCP startup validation.
+- Manual real-Codex-desktop Hook-injection smoke testing on macOS/Linux remains pending; no migration of an existing `memory.db` is required.
 
 ### v1.6.1
 
