@@ -108,7 +108,7 @@ sh ./install.sh
 sh ./scripts/test-install.sh
 ```
 
-Python 3 with `python3` on PATH is required. Regular users should continue to use the GitHub marketplace installation above.
+Python 3 with `python3` on PATH is required. The installer creates a private virtual environment in the plugin directory and installs runtime dependencies. Regular users should continue to use the GitHub marketplace installation above.
 
 Run the test suite:
 

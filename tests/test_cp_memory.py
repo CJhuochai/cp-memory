@@ -104,8 +104,17 @@ class CpMemoryTests(unittest.TestCase):
         installer = POSIX_INSTALL_SCRIPT.read_text(encoding="utf-8")
         self.assertIn('${HOME}/plugins', installer)
         self.assertIn('python3', installer)
+        self.assertIn('runtime_python="$plugin_target/.venv/bin/python"', installer)
+        self.assertIn('"$runtime_python" -m pip install -r "$plugin_target/requirements.txt"', installer)
+        self.assertIn('"$python_bin" - "$plugin_target/.mcp.json" "$runtime_python"', installer)
         self.assertNotIn('USERPROFILE', installer)
         self.assertNotIn('\\\\', installer)
+
+    def test_posix_hooks_prefer_python3(self):
+        hooks = json.loads((HOOKS_DIR / "claude-codex-hooks.json").read_text(encoding="utf-8"))["hooks"]
+        for entries in hooks.values():
+            command = entries[0]["hooks"][0]["command"]
+            self.assertIn("command -v python3", command)
 
     def test_runtime_dependencies_declare_mcp(self):
         self.assertTrue(REQUIREMENTS_FILE.exists())

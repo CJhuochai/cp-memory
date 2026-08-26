@@ -108,7 +108,7 @@ sh ./install.sh
 sh ./scripts/test-install.sh
 ```
 
-需要 Python 3，并确保 `python3` 在 PATH 中。推荐普通用户继续通过上面的 GitHub marketplace 安装。
+需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖。推荐普通用户继续通过上面的 GitHub marketplace 安装。
 
 运行测试：
 

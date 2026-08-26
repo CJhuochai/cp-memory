@@ -15,10 +15,25 @@ plugin_target="${HOME}/plugins/${plugin_name}"
 agents_home="${HOME}/.agents"
 marketplace_file="${agents_home}/plugins/marketplace.json"
 codex_config="${HOME}/.codex/config.toml"
+runtime_python="$plugin_target/.venv/bin/python"
 
 mkdir -p "$plugin_target" "${agents_home}/plugins" "${HOME}/.codex"
 cp -R "$plugin_source"/. "$plugin_target"/
 rm -rf "$plugin_target/.git" "$plugin_target/__pycache__"
+
+"$python_bin" -m venv "$plugin_target/.venv"
+"$runtime_python" -m pip install -r "$plugin_target/requirements.txt"
+
+"$python_bin" - "$plugin_target/.mcp.json" "$runtime_python" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["mcpServers"]["cp-memory-server"]["command"] = sys.argv[2]
+path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
 
 "$python_bin" - "$marketplace_file" <<'PY'
 import json
@@ -47,7 +62,7 @@ if ! grep -Fq '[plugins."cp-memory@personal"]' "$codex_config"; then
   printf '\n[plugins."cp-memory@personal"]\nenabled = true\n' >> "$codex_config"
 fi
 
-"$python_bin" -m py_compile \
+"$runtime_python" -m py_compile \
   "$plugin_target/scripts/cp_memory_store.py" \
   "$plugin_target/scripts/memory-mcp-server.py" \
   "$plugin_target/hooks/cp_memory_common.py" \
