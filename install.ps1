@@ -286,6 +286,7 @@ Write-Host " OK" -ForegroundColor Green
 Write-Host "[8/8] Validating Python entry points..." -NoNewline
 python -m py_compile `
     "$PluginTarget\scripts\cp_memory_store.py" `
+    "$PluginTarget\scripts\memory_mcp_server.py" `
     "$PluginTarget\scripts\memory-mcp-server.py" `
     "$PluginTarget\hooks\cp_memory_common.py" `
     "$PluginTarget\hooks\session_start.py" `

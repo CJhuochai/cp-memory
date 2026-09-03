@@ -317,11 +317,11 @@ git commit -m "feat: package CP Memory as a standard MCP server"
 - Consumes: legacy wrapper plus importable module from Task 1 and package verifier from Task 2.
 - Produces: plugin installation validation for both entrypoint files and package smoke coverage on Windows, macOS, and Ubuntu.
 
-- [ ] **Step 1: Extend installer compile checks**
+- [x] **Step 1: Extend installer compile checks**
 
 Add `scripts/memory_mcp_server.py` beside `scripts/memory-mcp-server.py` in both installer `py_compile` command lists. Do not change `.mcp.json`.
 
-- [ ] **Step 2: Add package verification to CI**
+- [x] **Step 2: Add package verification to CI**
 
 In both jobs, install build tooling and run the verifier after unit tests:
 
@@ -330,7 +330,7 @@ In both jobs, install build tooling and run the verifier after unit tests:
 - run: python scripts/test-package.py
 ```
 
-- [ ] **Step 3: Run local integration checks**
+- [x] **Step 3: Run local integration checks**
 
 ```powershell
 python scripts/test-package.py
@@ -339,7 +339,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 
 Expected: package smoke passes and all 8 installer steps pass using the unchanged legacy `.mcp.json` path.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add install.ps1 install.sh .github/workflows/cross-platform.yml

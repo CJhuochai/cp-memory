@@ -64,6 +64,7 @@ fi
 
 "$runtime_python" -m py_compile \
   "$plugin_target/scripts/cp_memory_store.py" \
+  "$plugin_target/scripts/memory_mcp_server.py" \
   "$plugin_target/scripts/memory-mcp-server.py" \
   "$plugin_target/hooks/cp_memory_common.py" \
   "$plugin_target/hooks/session_start.py" \
