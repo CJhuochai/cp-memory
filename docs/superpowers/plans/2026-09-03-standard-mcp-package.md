@@ -113,7 +113,7 @@ git commit -m "refactor: expose an importable MCP server entrypoint"
 - Consumes: `memory_mcp_server.main`, `cp_memory_store`, and `mcp>=1.27,<2`.
 - Produces: wheel/sdist metadata for `cp-memory-mcp==1.8.0`, console script `cp-memory-mcp`, and a clean-environment package verifier.
 
-- [ ] **Step 1: Write the package verifier before metadata exists**
+- [x] **Step 1: Write the package verifier before metadata exists**
 
 Create `scripts/test-package.py`:
 
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run the verifier and verify RED**
+- [x] **Step 2: Run the verifier and verify RED**
 
 ```powershell
 python -m pip install build
@@ -248,7 +248,7 @@ python scripts/test-package.py
 
 Expected: FAIL because `pyproject.toml` does not exist.
 
-- [ ] **Step 3: Add minimal `pyproject.toml`**
+- [x] **Step 3: Add minimal `pyproject.toml`**
 
 Use:
 
@@ -289,7 +289,7 @@ package-dir = { "" = "scripts" }
 py-modules = ["cp_memory_store", "memory_mcp_server"]
 ```
 
-- [ ] **Step 4: Run package verification and inspect metadata**
+- [x] **Step 4: Run package verification and inspect metadata**
 
 ```powershell
 python scripts/test-package.py
@@ -299,7 +299,7 @@ python -m twine check dist/*
 
 Install `twine` for this verification command if it is absent. Expected: wheel/sdist build, installed console MCP smoke, and metadata checks all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add pyproject.toml scripts/test-package.py

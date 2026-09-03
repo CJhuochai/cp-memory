@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cp-memory-mcp"
+version = "1.8.0"
+description = "Local-first, governable memory for AI coding agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Chen Jian" }]
+dependencies = ["mcp>=1.27,<2"]
+keywords = ["mcp", "agent-memory", "ai-memory", "local-first", "sqlite"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.urls]
+Homepage = "https://github.com/CJhuochai/cp-memory"
+Repository = "https://github.com/CJhuochai/cp-memory"
+Issues = "https://github.com/CJhuochai/cp-memory/issues"
+
+[project.scripts]
+cp-memory-mcp = "memory_mcp_server:main"
+
+[tool.setuptools]
+package-dir = { "" = "scripts" }
+py-modules = ["cp_memory_store", "memory_mcp_server"]
