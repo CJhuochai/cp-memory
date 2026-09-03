@@ -401,7 +401,7 @@ git commit -m "release: prepare CP Memory 1.8.0"
 - Consumes: all package-foundation commits.
 - Produces: a reviewable PR that does not publish PyPI, create a tag, or alter the real local installation.
 
-- [ ] **Step 1: Audit privacy, scope, and compatibility**
+- [x] **Step 1: Audit privacy, scope, and compatibility**
 
 ```powershell
 git diff main...HEAD --check
@@ -412,7 +412,7 @@ git diff main...HEAD -- .mcp.json scripts/memory-mcp-server.py scripts/memory_mc
 
 Confirm `.mcp.json` is unchanged, the legacy wrapper is thin, the importable module contains the former implementation plus `main`, and no private files are present.
 
-- [ ] **Step 2: Run fresh final verification**
+- [x] **Step 2: Run fresh final verification**
 
 ```powershell
 python -m unittest discover -s tests -p test_cp_memory.py
@@ -421,6 +421,6 @@ python scripts/test-package.py
 powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 ```
 
-- [ ] **Step 3: Prepare the next delivery boundary**
+- [x] **Step 3: Prepare the next delivery boundary**
 
 After PR review, merge, tag, GitHub Release, PyPI upload, and public `uvx` smoke are separate externally visible actions. Only after those succeed should a follow-up client-documentation PR advertise `uvx cp-memory-mcp`.
