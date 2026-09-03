@@ -358,23 +358,23 @@ git commit -m "ci: validate the standard MCP package"
 - Consumes: validated distribution metadata from Task 2.
 - Produces: synchronized 1.8.0 plugin/package metadata and honest pre-release documentation.
 
-- [ ] **Step 1: Synchronize version and positioning**
+- [x] **Step 1: Synchronize version and positioning**
 
 Set `.codex-plugin/plugin.json` to `1.8.0`. Update its bilingual description to state that standard MCP is the portable baseline and Codex Skills/Hooks are the enhanced integration.
 
-- [ ] **Step 2: Add bilingual changelog entries**
+- [x] **Step 2: Add bilingual changelog entries**
 
 Document the importable server, `cp-memory-mcp` package, compatibility wrapper, clean wheel smoke, unchanged database, and no migration requirement under `v1.8.0` in both languages.
 
-- [ ] **Step 3: Update README status without advertising an unavailable command**
+- [x] **Step 3: Update README status without advertising an unavailable command**
 
 Replace “package is the next delivery stage” with equivalent English and Chinese wording that 1.8.0 contains the package and that the public `uvx` command will be added after PyPI publication verification.
 
-- [ ] **Step 4: Verify metadata consistency**
+- [x] **Step 4: Verify metadata consistency**
 
 Run a Python check that parses `pyproject.toml` with `tomllib`, parses `.codex-plugin/plugin.json`, and asserts both versions equal `1.8.0`.
 
-- [ ] **Step 5: Run full acceptance**
+- [x] **Step 5: Run full acceptance**
 
 ```powershell
 python -m unittest discover -s tests -p test_cp_memory.py
@@ -385,7 +385,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 
 Expected: 51/51 unit tests, 20/20 memory benchmark, clean package smoke, and 8/8 installer steps pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add .codex-plugin/plugin.json CHANGELOG.md README.md README.zh-CN.md
