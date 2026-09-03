@@ -1,0 +1,166 @@
+<p align="center">
+  <img src="assets/logo.png" width="140" alt="CP Memory logo">
+</p>
+
+<h1 align="center">CP Memory</h1>
+
+<p align="center">
+  面向 AI 编码 Agent 的本地优先、可治理记忆层。<br>
+  跨会话记住项目规则，只恢复当前相关内容，纠正错误记忆时保留历史。
+</p>
+
+<p align="center">
+  简体中文 | <a href="README.md">English</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-6f42c1.svg">
+  <a href="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml"><img alt="Cross-platform CI" src="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg"></a>
+</p>
+
+---
+
+## 为什么选择 CP Memory
+
+- **本地优先：**记忆默认保存在 `~/.cp-memory/memory.db`。
+- **可治理：**可以检查、审阅、纠正、限定范围或停用记忆，而不是静默覆盖。
+- **MCP 基线、Codex 增强：**stdio MCP server 提供跨客户端基础能力；Codex 插件额外提供 Skills 和生命周期 Hooks。
+
+![CP Memory 30 秒演示](assets/demo.gif)
+
+## 快速开始——Codex 增强集成
+
+当前已经验证的一键路径是 Codex 插件：
+
+```powershell
+codex plugin marketplace add CJhuochai/cp-memory
+codex plugin add cp-memory@cp-memory
+```
+
+安装后重启 Codex；如果出现提示，请确认信任生命周期 Hooks。
+
+> **通用 MCP 状态：**CP Memory 已经提供 stdio MCP server。面向其他 MCP 客户端的一键安装包是下一阶段交付内容；在干净环境的握手和记忆冒烟通过前，README 不会提前宣传该命令。
+
+## 30 秒看到结果
+
+1. 告诉 Codex 一条项目规则，例如“发布必须先开分支、跑测试、再通过 PR 合并”。
+2. 在之后的新会话中，CP Memory 从本地主库按需恢复相关规则，让 Codex 继续按它工作。
+3. 如果规则记错了，保留纠错历史并将旧记录标记为错误、过期或限定范围，而不是静默覆盖。
+
+CP Memory 是一个面向 Codex 的本地优先记忆插件。它把事实、偏好、持续事项、事件、决策和会话检查点保存到本地 SQLite 数据库，再通过 MCP 工具和生命周期 hooks 在合适的时机恢复上下文。
+
+它的重点不是“尽可能多地记住”，而是“长期使用后仍然可信”：可解释、可审阅、可纠错、可治理。
+
+![CP Memory architecture](assets/architecture.svg)
+
+![CP Memory recall demo](assets/demo-recall.svg)
+
+## 当前能力
+
+- 恢复上下文：启动和提问时按需恢复本地主库里的相关记忆。
+- 自动提炼：从明确表达中保守生成个人长期记忆候选。
+- 项目范围：按 `repo:`、`project:`、`workspace:` 等 scope 优先恢复当前项目相关记忆。
+- 可审阅治理：支持审阅 Inbox、审阅报告、冲突建议、纠错状态和启动提醒。
+- 安全维护：每周维护只做健康检查、治理预检和低风险过期清理。
+
+![CP Memory governance loop](assets/governance-loop.svg)
+
+## 30 秒例子
+
+你告诉 Codex：
+
+```text
+记住一下：这个项目的发布流程必须先开分支、跑测试、再通过 PR 合并。
+```
+
+之后的新会话里，你可以问：
+
+```text
+我们这个插件的发布规则是什么？
+```
+
+CP Memory 会优先从本地主库恢复相关记忆，并让 Codex 按这条规则工作。如果记错了，你可以把那条记忆标记为错误、过期，或写入新的纠正版本。
+
+更多匿名化示例见 [docs/examples.md](docs/examples.md)。
+
+如需录制 GIF、短视频或发布介绍，可直接使用脱敏的[30 秒演示脚本](docs/30-second-demo.md)。
+
+## 安装
+
+Windows 推荐通过 GitHub Marketplace 安装：
+
+```powershell
+codex plugin marketplace add CJhuochai/cp-memory
+codex plugin add cp-memory@cp-memory
+```
+
+安装后重启 Codex。如果 Codex 提示信任 hooks，请在 hooks 页面确认 CP Memory 的生命周期 hooks。
+
+macOS/Linux 请使用源码安装器；它会创建插件私有 Python 运行环境并安装 MCP 依赖：
+
+```sh
+git clone https://github.com/CJhuochai/cp-memory.git
+cd cp-memory
+sh ./install.sh
+```
+
+完成后重启 Codex。不要把 macOS/Linux 的 GitHub Marketplace 安装当作已验证的等价路径：Marketplace 不会自动运行 `install.sh`，因而不会创建该私有运行环境。
+
+## 平台支持
+
+| 平台 | 推荐安装路径 | 已验证范围 |
+| --- | --- | --- |
+| Windows | GitHub Marketplace；本地开发可用 `install.ps1` | 单元测试、隔离安装验证和 GitHub Actions CI 均通过 |
+| macOS | 源码安装器 `sh ./install.sh` | GitHub Actions macOS CI：单元测试与隔离安装/MCP 启动验证通过 |
+| Linux | 源码安装器 `sh ./install.sh` | GitHub Actions Ubuntu CI：单元测试与隔离安装/MCP 启动验证通过 |
+
+macOS/Linux 的真实 Codex 桌面端 Hook 注入尚未在实体设备上手工冒烟；当前发布依据是三端 CI。这个边界不影响已覆盖的安装器和 MCP 启动验证，但不应被表述为完整桌面端手工验收。
+
+## 安全边界
+
+- 不要提交真实 `memory.db`、日志、私人摘要或环境文件。
+- 自动提炼默认保守，生成的记忆可以审阅、纠正、标记过期或标记错误。
+- 发现待审阅记忆时，当前版本会把提醒注入助手上下文；它不是用户界面弹窗或可见审阅面板，也不会自动删除或自动解决冲突。
+- 每周维护只做健康检查、治理预检和低风险过期清理；长期个人记忆、任务和决策默认受保护。
+- 示例和截图均使用脱敏内容，不需要暴露真实记忆库。
+
+## 对比
+
+如果你已经看过其他 memory 项目，可以直接看 [docs/comparison.md](docs/comparison.md)。CP Memory 的主要差异是：Codex 生命周期集成 + 记忆治理，而不是只做存储和搜索。
+
+## 路线图
+
+后续方向见 [docs/roadmap.md](docs/roadmap.md)。路线图会优先保持本地优先、可解释、可纠错和隐私安全。
+
+版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 本地开发
+
+Windows 普通用户通常不需要运行 `install.ps1`。它主要用于本地开发、刷新 personal marketplace 缓存，以及迁移旧版本留下的全局 hook 接线。
+
+macOS/Linux 本地开发可运行：
+
+```sh
+sh ./install.sh
+sh ./scripts/test-install.sh
+```
+
+需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖；这是 macOS/Linux 当前已验证的安装路径。
+
+运行测试：
+
+```powershell
+python -m unittest discover -s tests -p test_cp_memory.py
+```
+
+隔离验证安装脚本，不会触碰真实 Codex 配置：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
+```
+
+## License
+
+MIT

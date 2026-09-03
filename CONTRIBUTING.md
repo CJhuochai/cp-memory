@@ -29,7 +29,7 @@ git switch -c feat/your-change
 4. 文档要求：
 
 - 所有面向用户或维护者的文档必须提供中英双语内容。
-- 如果修改 `README.md`，通常也要同步修改 `README.en.md`。
+- 如果修改英文入口 `README.md`，通常也要同步修改 `README.zh-CN.md`。
 - 如果新增维护流程文档，可以在同一个 Markdown 文件中按“中文 / English”组织。
 
 ### 测试
@@ -102,7 +102,7 @@ git switch -c feat/your-change
 4. Documentation rule:
 
 - All user-facing or maintainer-facing documentation must include both Chinese and English content.
-- If you update `README.md`, usually update `README.en.md` as well.
+- If you update the English entry point `README.md`, usually update `README.zh-CN.md` as well.
 - If you add maintainer documentation, you may keep Chinese and English sections in the same Markdown file.
 
 ### Tests

@@ -5,86 +5,100 @@
 <h1 align="center">CP Memory</h1>
 
 <p align="center">
-  让 Codex 跨会话记住项目规则：本地保存、按需恢复、可解释且可纠错。
+  Local-first, governable memory for AI coding agents.<br>
+  Remember project rules across sessions, recall only what matters, and correct bad memory without hiding history.
 </p>
 
 <p align="center">
-  中文 | <a href="README.en.md">English</a>
+  <a href="README.zh-CN.md">简体中文</a> | English
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
-  <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
-  <img alt="CI: Windows macOS Linux" src="https://img.shields.io/badge/CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg">
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-6f42c1.svg">
+  <a href="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml"><img alt="Cross-platform CI" src="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg"></a>
 </p>
 
 ---
 
-## 30 秒看到结果
+## Why CP Memory
 
-1. 告诉 Codex 一条项目规则，例如“发布必须先开分支、跑测试、再通过 PR 合并”。
-2. 在之后的新会话中，CP Memory 从本地主库按需恢复相关规则，让 Codex 继续按它工作。
-3. 如果规则记错了，保留纠错历史并将旧记录标记为错误、过期或限定范围，而不是静默覆盖。
+- **Local first:** memory stays in `~/.cp-memory/memory.db` by default.
+- **Governable:** inspect, review, correct, scope, or retire memory instead of silently overwriting it.
+- **MCP-ready, Codex-enhanced:** the stdio MCP server is the portable baseline; the Codex plugin adds Skills and lifecycle Hooks.
 
-CP Memory 是一个面向 Codex 的本地优先记忆插件。它把事实、偏好、持续事项、事件、决策和会话检查点保存到本地 SQLite 数据库，再通过 MCP 工具和生命周期 hooks 在合适的时机恢复上下文。
+![CP Memory 30-second demo](assets/demo.gif)
 
-它的重点不是“尽可能多地记住”，而是“长期使用后仍然可信”：可解释、可审阅、可纠错、可治理。
+## Quick Start — Codex Enhanced Integration
 
-![CP Memory architecture](assets/architecture.svg)
-
-![CP Memory recall demo](assets/demo-recall.svg)
-
-## 为什么用它
-
-- 本地优先：默认数据保存在 `~/.cp-memory/memory.db`。
-- Codex 原生：同时支持 plugin manifest、MCP server、skills 和 lifecycle hooks。
-- 长期个人记忆：支持画像、偏好、关系、持续事项、事件和稳定决策。
-- 可治理：支持冲突检测、纠错历史、复核队列和治理报告。
-- 保守提炼：只从明确表达中提炼长期记忆，降低“乱记”和上下文污染。
-
-## 当前能力
-
-- 恢复上下文：启动和提问时按需恢复本地主库里的相关记忆。
-- 自动提炼：从明确表达中保守生成个人长期记忆候选。
-- 项目范围：按 `repo:`、`project:`、`workspace:` 等 scope 优先恢复当前项目相关记忆。
-- 可审阅治理：支持审阅 Inbox、审阅报告、冲突建议、纠错状态和启动提醒。
-- 安全维护：每周维护只做健康检查、治理预检和低风险过期清理。
-
-![CP Memory governance loop](assets/governance-loop.svg)
-
-## 30 秒例子
-
-你告诉 Codex：
-
-```text
-记住一下：这个项目的发布流程必须先开分支、跑测试、再通过 PR 合并。
-```
-
-之后的新会话里，你可以问：
-
-```text
-我们这个插件的发布规则是什么？
-```
-
-CP Memory 会优先从本地主库恢复相关记忆，并让 Codex 按这条规则工作。如果记错了，你可以把那条记忆标记为错误、过期，或写入新的纠正版本。
-
-更多匿名化示例见 [docs/examples.md](docs/examples.md)。
-
-如需录制 GIF、短视频或发布介绍，可直接使用脱敏的[30 秒演示脚本](docs/30-second-demo.md)。
-
-## 安装
-
-Windows 推荐通过 GitHub Marketplace 安装：
+The currently verified one-command path is the Codex plugin:
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
 codex plugin add cp-memory@cp-memory
 ```
 
-安装后重启 Codex。如果 Codex 提示信任 hooks，请在 hooks 页面确认 CP Memory 的生命周期 hooks。
+Restart Codex after installation and approve the lifecycle Hooks if prompted.
 
-macOS/Linux 请使用源码安装器；它会创建插件私有 Python 运行环境并安装 MCP 依赖：
+> **Portable MCP status:** CP Memory already exposes a stdio MCP server. A verified one-command package for other MCP clients is the next delivery stage; this README will not advertise that command until its clean-environment handshake and memory smoke tests pass.
+
+## See The Result In 30 Seconds
+
+1. Tell Codex a project rule, such as: “Releases must start on a branch, run tests, and merge through a PR.”
+2. In a later session, CP Memory restores the relevant rule from the local primary store so Codex can continue following it.
+3. If the rule is wrong, preserve correction history and mark the old record wrong, stale, or scoped instead of silently overwriting it.
+
+CP Memory is a local-first memory plugin for Codex. It stores facts, preferences, ongoing work, episodes, decisions, and conversation checkpoints in a local SQLite database, then restores relevant context through MCP tools and lifecycle hooks.
+
+The goal is not to remember as much as possible. The goal is memory that remains trustworthy after long-term use: explainable, reviewable, correctable, and governable.
+
+![CP Memory architecture](assets/architecture.svg)
+
+![CP Memory recall demo](assets/demo-recall.svg)
+
+## Current Capabilities
+
+- Context restore: restores relevant local-primary memory on startup and eligible prompts.
+- Automatic extraction: conservatively creates long-term personal memory candidates from explicit statements.
+- Project scope: prioritizes current-project memories with `repo:`, `project:`, and `workspace:` scopes.
+- Reviewable governance: supports review inbox, review digests, conflict suggestions, correction states, and startup reminders.
+- Safe maintenance: weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only.
+
+![CP Memory governance loop](assets/governance-loop.svg)
+
+## 30-Second Example
+
+You tell Codex:
+
+```text
+Remember this: releases for this project must start on a branch, run tests, and merge through a PR.
+```
+
+In a later session, you ask:
+
+```text
+What are the release rules for this plugin?
+```
+
+CP Memory restores the relevant memory from the local primary store first, and Codex follows that rule. If the memory is wrong, you can mark it wrong, mark it stale, or write a corrected version.
+
+See more anonymized examples in [docs/examples.md](docs/examples.md).
+
+For a GIF, short video, or launch post, use the sanitized [30-second demo script](docs/30-second-demo.md).
+
+## Install
+
+For Windows, the recommended path is GitHub Marketplace installation:
+
+```powershell
+codex plugin marketplace add CJhuochai/cp-memory
+codex plugin add cp-memory@cp-memory
+```
+
+Restart Codex after installation. If Codex asks you to trust hooks, approve the CP Memory lifecycle hooks in the hooks view.
+
+For macOS/Linux, use the source installer. It creates a private Python runtime for the plugin and installs the MCP dependency:
 
 ```sh
 git clone https://github.com/CJhuochai/cp-memory.git
@@ -92,56 +106,56 @@ cd cp-memory
 sh ./install.sh
 ```
 
-完成后重启 Codex。不要把 macOS/Linux 的 GitHub Marketplace 安装当作已验证的等价路径：Marketplace 不会自动运行 `install.sh`，因而不会创建该私有运行环境。
+Restart Codex when it finishes. Do not treat GitHub Marketplace installation on macOS/Linux as an equivalently verified path: Marketplace does not run `install.sh`, so it does not create that private runtime.
 
-## 平台支持
+## Platform Support
 
-| 平台 | 推荐安装路径 | 已验证范围 |
+| Platform | Recommended installation | Verified coverage |
 | --- | --- | --- |
-| Windows | GitHub Marketplace；本地开发可用 `install.ps1` | 单元测试、隔离安装验证和 GitHub Actions CI 均通过 |
-| macOS | 源码安装器 `sh ./install.sh` | GitHub Actions macOS CI：单元测试与隔离安装/MCP 启动验证通过 |
-| Linux | 源码安装器 `sh ./install.sh` | GitHub Actions Ubuntu CI：单元测试与隔离安装/MCP 启动验证通过 |
+| Windows | GitHub Marketplace; `install.ps1` for local development | Unit tests, isolated installation validation, and GitHub Actions CI passed |
+| macOS | Source installer: `sh ./install.sh` | GitHub Actions macOS CI passed unit tests and isolated install/MCP startup validation |
+| Linux | Source installer: `sh ./install.sh` | GitHub Actions Ubuntu CI passed unit tests and isolated install/MCP startup validation |
 
-macOS/Linux 的真实 Codex 桌面端 Hook 注入尚未在实体设备上手工冒烟；当前发布依据是三端 CI。这个边界不影响已覆盖的安装器和 MCP 启动验证，但不应被表述为完整桌面端手工验收。
+Manual smoke testing of real Codex desktop Hook injection on macOS/Linux is still pending access to physical devices. This release is accepted through three-platform CI; the boundary does not affect the installer and MCP-startup checks already covered, but it is not a substitute for full desktop manual acceptance.
 
-## 安全边界
+## Safety
 
-- 不要提交真实 `memory.db`、日志、私人摘要或环境文件。
-- 自动提炼默认保守，生成的记忆可以审阅、纠正、标记过期或标记错误。
-- 发现待审阅记忆时，当前版本会把提醒注入助手上下文；它不是用户界面弹窗或可见审阅面板，也不会自动删除或自动解决冲突。
-- 每周维护只做健康检查、治理预检和低风险过期清理；长期个人记忆、任务和决策默认受保护。
-- 示例和截图均使用脱敏内容，不需要暴露真实记忆库。
+- Do not commit your real `memory.db`, logs, private summaries, or environment files.
+- Automatic extraction is intentionally conservative. Generated memories can be reviewed, corrected, marked stale, or marked wrong.
+- When memories need review, the current version injects a reminder into assistant context. It is not a user-facing popup or visible review panel, and it does not auto-delete memory or auto-resolve conflicts.
+- Weekly maintenance runs health checks, governance preflight, and low-risk expiry cleanup only; long-term personal memories, tasks, and decisions are protected by default.
+- Examples and screenshots use sanitized content, so you do not need to expose your real memory database.
 
-## 对比
+## Comparison
 
-如果你已经看过其他 memory 项目，可以直接看 [docs/comparison.md](docs/comparison.md)。CP Memory 的主要差异是：Codex 生命周期集成 + 记忆治理，而不是只做存储和搜索。
+If you have seen other memory projects, start with [docs/comparison.md](docs/comparison.md). CP Memory's main difference is Codex lifecycle integration plus memory governance, not just storage and search.
 
-## 路线图
+## Roadmap
 
-后续方向见 [docs/roadmap.md](docs/roadmap.md)。路线图会优先保持本地优先、可解释、可纠错和隐私安全。
+See [docs/roadmap.md](docs/roadmap.md) for future directions. The roadmap prioritizes local-first behavior, explainability, correctability, and privacy safety.
 
-版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+See [CHANGELOG.md](CHANGELOG.md) for version history.
 
-## 本地开发
+## Local Development
 
-Windows 普通用户通常不需要运行 `install.ps1`。它主要用于本地开发、刷新 personal marketplace 缓存，以及迁移旧版本留下的全局 hook 接线。
+Windows users normally do not need to run `install.ps1`. It is mainly for local development, refreshing the personal marketplace cache, and migrating old global hook wiring from earlier versions.
 
-macOS/Linux 本地开发可运行：
+For local macOS/Linux development, run:
 
 ```sh
 sh ./install.sh
 sh ./scripts/test-install.sh
 ```
 
-需要 Python 3，并确保 `python3` 在 PATH 中。安装器会在插件目录创建私有虚拟环境并安装运行依赖；这是 macOS/Linux 当前已验证的安装路径。
+Python 3 with `python3` on PATH is required. The installer creates a private virtual environment in the plugin directory and installs runtime dependencies; this is the currently verified installation path for macOS/Linux.
 
-运行测试：
+Run the test suite:
 
 ```powershell
 python -m unittest discover -s tests -p test_cp_memory.py
 ```
 
-隔离验证安装脚本，不会触碰真实 Codex 配置：
+Validate the installer in an isolated temporary profile without touching your real Codex configuration:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
