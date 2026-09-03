@@ -32,9 +32,17 @@
 
 ![CP Memory 30-second demo](assets/demo.gif)
 
-## Quick Start — Codex Enhanced Integration
+## Quick Start — Portable MCP
 
-The currently verified one-command path is the Codex plugin:
+With Python 3.10+ and [`uv`](https://docs.astral.sh/uv/) installed, any stdio MCP client can start CP Memory with:
+
+```text
+uvx cp-memory-mcp
+```
+
+The public package passed a clean-cache MCP handshake with all 40 tools and a write/search/correct flow. See [MCP client setup](docs/mcp-clients.md) for Codex, Claude Code, Cursor, VS Code, and Gemini CLI examples.
+
+For the enhanced Codex integration with lifecycle Hooks and Skills, install the plugin:
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
@@ -42,8 +50,6 @@ codex plugin add cp-memory@cp-memory
 ```
 
 Restart Codex after installation and approve the lifecycle Hooks if prompted.
-
-> **Portable MCP status:** This repository now includes the `cp-memory-mcp` Python package and validates it in a clean environment. The public `uvx cp-memory-mcp` command will be documented only after the package is uploaded to PyPI and smoke-tested from the registry.
 
 ## See The Result In 30 Seconds
 
@@ -90,6 +96,14 @@ See more anonymized examples in [docs/examples.md](docs/examples.md).
 For a GIF, short video, or launch post, use the sanitized [30-second demo script](docs/30-second-demo.md).
 
 ## Install
+
+For any stdio MCP client, use the verified public package:
+
+```text
+uvx cp-memory-mcp
+```
+
+Client-specific commands and JSON files are in [docs/mcp-clients.md](docs/mcp-clients.md).
 
 For Windows, the recommended path is GitHub Marketplace installation:
 

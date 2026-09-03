@@ -22,6 +22,7 @@ POSIX_INSTALL_SCRIPT = PLUGIN_HOME / "install.sh"
 POSIX_INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.sh"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
 SERVER_MANIFEST = PLUGIN_HOME / "server.json"
+CLIENT_DOC = PLUGIN_HOME / "docs" / "mcp-clients.md"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
 REQUIREMENTS_FILE = PLUGIN_HOME / "requirements.txt"
 
@@ -123,6 +124,19 @@ class CpMemoryTests(unittest.TestCase):
             ],
         )
         self.assertIn("<!-- mcp-name: io.github.CJhuochai/cp-memory -->", readme)
+
+    def test_portable_client_docs_cover_supported_clients(self):
+        english = (PLUGIN_HOME / "README.md").read_text(encoding="utf-8")
+        chinese = (PLUGIN_HOME / "README.zh-CN.md").read_text(encoding="utf-8")
+        clients = CLIENT_DOC.read_text(encoding="utf-8")
+
+        self.assertIn("uvx cp-memory-mcp", english)
+        self.assertIn("uvx cp-memory-mcp", chinese)
+        for name in ("Codex", "Claude Code", "Cursor", "VS Code", "Gemini CLI"):
+            self.assertIn(name, clients)
+        self.assertIn("codex mcp add cp-memory -- uvx cp-memory-mcp", clients)
+        self.assertIn("claude mcp add cp-memory -- uvx cp-memory-mcp", clients)
+        self.assertIn("gemini mcp add cp-memory uvx cp-memory-mcp", clients)
 
     def test_posix_installer_uses_home_and_python3_without_windows_paths(self):
         self.assertTrue(POSIX_INSTALL_SCRIPT.exists())
