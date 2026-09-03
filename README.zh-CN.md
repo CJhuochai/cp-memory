@@ -5,21 +5,43 @@
 <h1 align="center">CP Memory</h1>
 
 <p align="center">
-  让 Codex 跨会话记住项目规则：本地保存、按需恢复、可解释且可纠错。
+  面向 AI 编码 Agent 的本地优先、可治理记忆层。<br>
+  跨会话记住项目规则，只恢复当前相关内容，纠正错误记忆时保留历史。
 </p>
 
 <p align="center">
-  中文 | <a href="README.en.md">English</a>
+  简体中文 | <a href="README.md">English</a>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
-  <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
-  <img alt="CI: Windows macOS Linux" src="https://img.shields.io/badge/CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg">
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-6f42c1.svg">
+  <a href="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml"><img alt="Cross-platform CI" src="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg"></a>
 </p>
 
 ---
+
+## 为什么选择 CP Memory
+
+- **本地优先：**记忆默认保存在 `~/.cp-memory/memory.db`。
+- **可治理：**可以检查、审阅、纠正、限定范围或停用记忆，而不是静默覆盖。
+- **MCP 基线、Codex 增强：**stdio MCP server 提供跨客户端基础能力；Codex 插件额外提供 Skills 和生命周期 Hooks。
+
+![CP Memory 30 秒演示](assets/demo.gif)
+
+## 快速开始——Codex 增强集成
+
+当前已经验证的一键路径是 Codex 插件：
+
+```powershell
+codex plugin marketplace add CJhuochai/cp-memory
+codex plugin add cp-memory@cp-memory
+```
+
+安装后重启 Codex；如果出现提示，请确认信任生命周期 Hooks。
+
+> **通用 MCP 状态：**CP Memory 已经提供 stdio MCP server。面向其他 MCP 客户端的一键安装包是下一阶段交付内容；在干净环境的握手和记忆冒烟通过前，README 不会提前宣传该命令。
 
 ## 30 秒看到结果
 
@@ -34,14 +56,6 @@ CP Memory 是一个面向 Codex 的本地优先记忆插件。它把事实、偏
 ![CP Memory architecture](assets/architecture.svg)
 
 ![CP Memory recall demo](assets/demo-recall.svg)
-
-## 为什么用它
-
-- 本地优先：默认数据保存在 `~/.cp-memory/memory.db`。
-- Codex 原生：同时支持 plugin manifest、MCP server、skills 和 lifecycle hooks。
-- 长期个人记忆：支持画像、偏好、关系、持续事项、事件和稳定决策。
-- 可治理：支持冲突检测、纠错历史、复核队列和治理报告。
-- 保守提炼：只从明确表达中提炼长期记忆，降低“乱记”和上下文污染。
 
 ## 当前能力
 

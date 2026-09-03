@@ -5,21 +5,43 @@
 <h1 align="center">CP Memory</h1>
 
 <p align="center">
-  Help Codex keep project rules across sessions: local storage, relevant restore, explainable memory, and safe correction.
+  Local-first, governable memory for AI coding agents.<br>
+  Remember project rules across sessions, recall only what matters, and correct bad memory without hiding history.
 </p>
 
 <p align="center">
-  <a href="README.md">中文</a> | English
+  <a href="README.zh-CN.md">简体中文</a> | English
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Local first" src="https://img.shields.io/badge/memory-local--first-blue.svg">
-  <img alt="Codex plugin" src="https://img.shields.io/badge/Codex-plugin-black.svg">
-  <img alt="CI: Windows macOS Linux" src="https://img.shields.io/badge/CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg">
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-6f42c1.svg">
+  <a href="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml"><img alt="Cross-platform CI" src="https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg"></a>
 </p>
 
 ---
+
+## Why CP Memory
+
+- **Local first:** memory stays in `~/.cp-memory/memory.db` by default.
+- **Governable:** inspect, review, correct, scope, or retire memory instead of silently overwriting it.
+- **MCP-ready, Codex-enhanced:** the stdio MCP server is the portable baseline; the Codex plugin adds Skills and lifecycle Hooks.
+
+![CP Memory 30-second demo](assets/demo.gif)
+
+## Quick Start — Codex Enhanced Integration
+
+The currently verified one-command path is the Codex plugin:
+
+```powershell
+codex plugin marketplace add CJhuochai/cp-memory
+codex plugin add cp-memory@cp-memory
+```
+
+Restart Codex after installation and approve the lifecycle Hooks if prompted.
+
+> **Portable MCP status:** CP Memory already exposes a stdio MCP server. A verified one-command package for other MCP clients is the next delivery stage; this README will not advertise that command until its clean-environment handshake and memory smoke tests pass.
 
 ## See The Result In 30 Seconds
 
@@ -34,14 +56,6 @@ The goal is not to remember as much as possible. The goal is memory that remains
 ![CP Memory architecture](assets/architecture.svg)
 
 ![CP Memory recall demo](assets/demo-recall.svg)
-
-## Why Use It
-
-- Local-first: data is stored under `~/.cp-memory/memory.db` by default.
-- Codex-native: supports plugin metadata, MCP server, skills, and lifecycle hooks.
-- Long-term personal memory: supports profiles, preferences, relationships, ongoing work, episodes, and stable decisions.
-- Governable: includes conflict detection, correction history, review queues, and governance reports.
-- Conservative extraction: extracts long-term memory only from explicit signals to reduce noisy or incorrect memory.
 
 ## Current Capabilities
 

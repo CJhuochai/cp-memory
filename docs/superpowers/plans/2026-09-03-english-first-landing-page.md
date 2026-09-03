@@ -78,14 +78,14 @@ git commit -m "docs: add sanitized launch visuals"
 - Consumes: current bilingual README content, verified Codex installation commands, and Task 1 assets.
 - Produces: an English default landing page and an equivalent Chinese translation.
 
-- [ ] **Step 1: Rename without losing Git history**
+- [x] **Step 1: Rename without losing Git history**
 
 ```powershell
 git mv README.md README.zh-CN.md
 git mv README.en.md README.md
 ```
 
-- [ ] **Step 2: Replace both hero sections**
+- [x] **Step 2: Replace both hero sections**
 
 English:
 
@@ -119,7 +119,7 @@ Replace the static CI badge in both files with:
 [![Cross-platform CI](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg)](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml)
 ```
 
-- [ ] **Step 3: Tighten the first screen**
+- [x] **Step 3: Tighten the first screen**
 
 Before architecture detail, show only:
 
@@ -129,11 +129,11 @@ Before architecture detail, show only:
 
 State bilingually that CP Memory already exposes a stdio MCP server, standard one-command packaging comes next, and Codex Skills/Hooks are enhancements rather than requirements of the memory model.
 
-- [ ] **Step 4: Verify README resources**
+- [x] **Step 4: Verify README resources**
 
 Run a local Markdown-link scan for both files, confirm every relative target exists, confirm the dynamic workflow badge URL, and review the rendered first screen.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add README.md README.zh-CN.md README.en.md
