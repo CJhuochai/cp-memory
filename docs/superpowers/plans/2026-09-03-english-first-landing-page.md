@@ -32,7 +32,7 @@
 - Consumes: `assets/logo.png` and the fictional `demo-plugin` scenario in `docs/30-second-demo.md`.
 - Produces: a looping 1200×675 demo GIF and a 1280×640 social-preview PNG.
 
-- [ ] **Step 1: Create the social-preview SVG source**
+- [x] **Step 1: Create the social-preview SVG source**
 
 Use the existing dark-blue visual language from `assets/architecture.svg` with this exact visible copy:
 
@@ -43,7 +43,7 @@ Remember • Recall • Correct
 MCP baseline · Codex enhanced
 ```
 
-- [ ] **Step 2: Render publishable raster assets**
+- [x] **Step 2: Render publishable raster assets**
 
 Render `assets/social-preview.svg` to `assets/social-preview.png`. Generate three `demo-plugin` scenes from the existing demo script and combine them into `assets/demo.gif` with these captions:
 
@@ -55,11 +55,11 @@ Render `assets/social-preview.svg` to `assets/social-preview.png`. Generate thre
 
 Keep the PNG below 1 MB and the GIF below 10 MB.
 
-- [ ] **Step 3: Validate and visually inspect**
+- [x] **Step 3: Validate and visually inspect**
 
 Use an image decoder to confirm format and exact dimensions, then open both raster assets and check readable text, framing, animation, and privacy.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add assets/demo.gif assets/social-preview.svg assets/social-preview.png
