@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -101,9 +102,11 @@ class CpMemoryTests(unittest.TestCase):
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
 
     def test_registry_metadata_matches_python_distribution(self):
-        import tomllib
-
-        package = tomllib.loads((PLUGIN_HOME / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+        project = (PLUGIN_HOME / "pyproject.toml").read_text(encoding="utf-8").split("[project]", 1)[1].split("\n[", 1)[0]
+        package = {
+            key: re.search(rf'(?m)^{key} = "([^"]+)"$', project).group(1)
+            for key in ("name", "version")
+        }
         plugin = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
         registry = json.loads(SERVER_MANIFEST.read_text(encoding="utf-8"))
         readme = (PLUGIN_HOME / "README.md").read_text(encoding="utf-8")
