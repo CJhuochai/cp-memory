@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.CJhuochai/cp-memory",
+  "title": "CP Memory",
+  "description": "Local-first, governable long-term memory for AI coding agents",
+  "repository": {
+    "url": "https://github.com/CJhuochai/cp-memory",
+    "source": "github"
+  },
+  "version": "1.8.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "cp-memory-mcp",
+      "version": "1.8.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

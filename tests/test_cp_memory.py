@@ -21,6 +21,7 @@ INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.ps1"
 POSIX_INSTALL_SCRIPT = PLUGIN_HOME / "install.sh"
 POSIX_INSTALL_TEST_SCRIPT = PLUGIN_HOME / "scripts" / "test-install.sh"
 MCP_CONFIG = PLUGIN_HOME / ".mcp.json"
+SERVER_MANIFEST = PLUGIN_HOME / "server.json"
 MARKETPLACE_CONFIG = PLUGIN_HOME / ".agents" / "plugins" / "marketplace.json"
 REQUIREMENTS_FILE = PLUGIN_HOME / "requirements.txt"
 
@@ -97,6 +98,31 @@ class CpMemoryTests(unittest.TestCase):
         manifest = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(manifest["interface"]["websiteURL"], "https://github.com/CJhuochai/cp-memory")
         self.assertTrue(INSTALL_TEST_SCRIPT.exists())
+
+    def test_registry_metadata_matches_python_distribution(self):
+        import tomllib
+
+        package = tomllib.loads((PLUGIN_HOME / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+        plugin = json.loads(PLUGIN_MANIFEST.read_text(encoding="utf-8"))
+        registry = json.loads(SERVER_MANIFEST.read_text(encoding="utf-8"))
+        readme = (PLUGIN_HOME / "README.md").read_text(encoding="utf-8")
+
+        self.assertEqual(package["version"], "1.8.1")
+        self.assertEqual(plugin["version"], package["version"])
+        self.assertEqual(registry["name"], "io.github.CJhuochai/cp-memory")
+        self.assertEqual(registry["version"], package["version"])
+        self.assertEqual(
+            registry["packages"],
+            [
+                {
+                    "registryType": "pypi",
+                    "identifier": package["name"],
+                    "version": package["version"],
+                    "transport": {"type": "stdio"},
+                }
+            ],
+        )
+        self.assertIn("<!-- mcp-name: io.github.CJhuochai/cp-memory -->", readme)
 
     def test_posix_installer_uses_home_and_python3_without_windows_paths(self):
         self.assertTrue(POSIX_INSTALL_SCRIPT.exists())

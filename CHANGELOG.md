@@ -2,6 +2,12 @@
 
 ## 中文
 
+### v1.8.1
+
+- 将已通过公网冒烟的 `uvx cp-memory-mcp` 作为通用 MCP 推荐启动方式，并补充 Codex、Claude Code、Cursor、VS Code 和 Gemini CLI 配置。
+- 新增官方 MCP Registry 元数据和 PyPI 所有权标记，为 `io.github.CJhuochai/cp-memory` 目录发布做准备。
+- 不修改现有 40 个 MCP 工具、Hooks 或数据库格式；已有 `~/.cp-memory/memory.db` 无需迁移。
+
 ### v1.8.0
 
 - 新增标准 Python 发行包 `cp-memory-mcp` 和控制台入口 `cp-memory-mcp`，为通用 MCP 客户端提供可移植基础。
@@ -72,6 +78,12 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.8.1
+
+- Made the publicly smoke-tested `uvx cp-memory-mcp` command the recommended portable MCP launch path, with setup examples for Codex, Claude Code, Cursor, VS Code, and Gemini CLI.
+- Added official MCP Registry metadata and the PyPI ownership marker required to publish `io.github.CJhuochai/cp-memory`.
+- Kept all 40 MCP tools, Hooks, and the database format unchanged; existing `~/.cp-memory/memory.db` files need no migration.
 
 ### v1.8.0
 

@@ -4,6 +4,8 @@
 
 <h1 align="center">CP Memory</h1>
 
+<!-- mcp-name: io.github.CJhuochai/cp-memory -->
+
 <p align="center">
   面向 AI 编码 Agent 的本地优先、可治理记忆层。<br>
   跨会话记住项目规则，只恢复当前相关内容，纠正错误记忆时保留历史。

@@ -4,6 +4,8 @@
 
 <h1 align="center">CP Memory</h1>
 
+<!-- mcp-name: io.github.CJhuochai/cp-memory -->
+
 <p align="center">
   Local-first, governable memory for AI coding agents.<br>
   Remember project rules across sessions, recall only what matters, and correct bad memory without hiding history.
