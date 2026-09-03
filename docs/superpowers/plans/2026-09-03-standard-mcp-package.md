@@ -33,7 +33,7 @@
 - Consumes: existing `mcp: FastMCP` and all 40 decorated tool functions.
 - Produces: `memory_mcp_server.main() -> None`; legacy script re-exports the same `mcp`, `main`, and tool functions.
 
-- [ ] **Step 1: Write the failing compatibility test**
+- [x] **Step 1: Write the failing compatibility test**
 
 Add:
 
@@ -55,7 +55,7 @@ def test_importable_mcp_module_and_legacy_entrypoint_share_server(self):
     self.assertTrue(callable(packaged.main))
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 ```powershell
 python -m unittest tests.test_cp_memory.CpMemoryTests.test_importable_mcp_module_and_legacy_entrypoint_share_server
@@ -63,7 +63,7 @@ python -m unittest tests.test_cp_memory.CpMemoryTests.test_importable_mcp_module
 
 Expected: FAIL because `memory_mcp_server` does not exist.
 
-- [ ] **Step 3: Rename the implementation and add `main`**
+- [x] **Step 3: Rename the implementation and add `main`**
 
 Move the current implementation to `scripts/memory_mcp_server.py`. Replace its bottom block with:
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 4: Run focused and full tests**
+- [x] **Step 4: Run focused and full tests**
 
 ```powershell
 python -m unittest tests.test_cp_memory.CpMemoryTests.test_importable_mcp_module_and_legacy_entrypoint_share_server
@@ -96,7 +96,7 @@ python -m unittest discover -s tests -p test_cp_memory.py
 
 Expected: focused test passes and all 51 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add tests/test_cp_memory.py scripts/memory-mcp-server.py scripts/memory_mcp_server.py

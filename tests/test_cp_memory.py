@@ -148,6 +148,22 @@ class CpMemoryTests(unittest.TestCase):
             tool_names = asyncio.run(list_tool_names())
             self.assertTrue({"memory_recall", "memory_search", "memory_probe"}.issubset(tool_names))
 
+    def test_importable_mcp_module_and_legacy_entrypoint_share_server(self):
+        if "memory_mcp_server" in sys.modules:
+            del sys.modules["memory_mcp_server"]
+        packaged = importlib.import_module("memory_mcp_server")
+        spec = importlib.util.spec_from_file_location(
+            "legacy_memory_mcp_server",
+            SCRIPTS_DIR / "memory-mcp-server.py",
+        )
+        legacy = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(legacy)
+
+        self.assertIs(legacy.mcp, packaged.mcp)
+        self.assertIs(legacy.main, packaged.main)
+        self.assertIs(legacy.memory_recall, packaged.memory_recall)
+        self.assertTrue(callable(packaged.main))
+
     @unittest.skipUnless(sys.platform == "win32", "Windows PowerShell installer test")
     def test_install_keeps_global_hooks_config_untouched_and_does_not_copy_hook_scripts(self):
         temp_profile = Path(tempfile.mkdtemp(prefix="cp-memory-install-"))
