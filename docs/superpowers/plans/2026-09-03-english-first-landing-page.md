@@ -154,11 +154,11 @@ git commit -m "docs: make the repository landing page English first"
 - Consumes: README filenames and portable-MCP positioning from Task 2.
 - Produces: consistent bilingual contributor, comparison, roadmap, demo, and launch guidance.
 
-- [ ] **Step 1: Update README filename guidance**
+- [x] **Step 1: Update README filename guidance**
 
 Change `CONTRIBUTING.md` so README changes keep `README.md` and `README.zh-CN.md` equivalent.
 
-- [ ] **Step 2: Update positioning bilingually**
+- [x] **Step 2: Update positioning bilingually**
 
 Use these equivalent boundaries in comparison, roadmap, and launch documents:
 
@@ -169,15 +169,15 @@ English: Standard MCP provides the cross-client baseline; the Codex plugin adds 
 
 Retain the existing real-device macOS/Linux Codex desktop Hook caveat.
 
-- [ ] **Step 3: Align the demo script**
+- [x] **Step 3: Align the demo script**
 
 Link `../assets/demo.gif` from `docs/30-second-demo.md` and add the three Task 1 captions plus equivalent Chinese captions to the existing scenes.
 
-- [ ] **Step 4: Verify links and stale names**
+- [x] **Step 4: Verify links and stale names**
 
 Confirm all changed relative Markdown targets exist. `README.en.md` must remain only in historical design/plan documents, not current user or contributor guidance.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add CONTRIBUTING.md docs/comparison.md docs/roadmap.md docs/30-second-demo.md docs/launch/launch.en.md docs/launch/launch.zh-CN.md

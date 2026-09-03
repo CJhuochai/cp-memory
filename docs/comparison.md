@@ -6,8 +6,8 @@ CP Memory 和很多 memory 项目一样使用本地存储，但它的核心定�
 
 | 维度 | 常见本地 memory 项目 | CP Memory |
 | --- | --- | --- |
-| 主要目标 | 存储和搜索事实、笔记或会话片段 | 在 Codex 工作流中恢复可信上下文 |
-| 集成方式 | 通常以 MCP server 为主 | Codex plugin + MCP server + skills + lifecycle hooks |
+| 主要目标 | 存储和搜索事实、笔记或会话片段 | 为 AI Agent 恢复可信、可治理的上下文 |
+| 集成方式 | 通常以 MCP server 为主 | 标准 MCP 基线 + Codex plugin、Skills 和 lifecycle Hooks 增强 |
 | 记忆模型 | 多为通用 key/value、文档或图谱 | 画像、偏好、关系、持续事项、事件、稳定决策 |
 | 自动提炼 | 有些项目支持，但通常偏宽松 | 默认保守，只从明确表达中提炼 |
 | 纠错能力 | 常见做法是更新或删除 | 支持 wrong/stale、纠错历史和解释 |
@@ -29,7 +29,7 @@ CP Memory 更适合：
 
 - 还没有图形化审阅界面。
 - macOS/Linux 的真实 Codex 桌面端 Hook 注入尚待设备到位后的手工冒烟。
-- 主要体验围绕 Codex，其他客户端不是优先目标。
+- 标准 MCP 提供跨客户端基础能力；Codex 插件额外提供 Skills 和生命周期 Hooks 增强体验。
 - 自动提炼刻意保守，所以不会把所有聊天内容都变成长期记忆。
 
 ## English
@@ -38,8 +38,8 @@ CP Memory uses local storage like many other memory projects, but its core posit
 
 | Dimension | Common local memory projects | CP Memory |
 | --- | --- | --- |
-| Main goal | Store and search facts, notes, or conversation snippets | Restore trustworthy context inside Codex workflows |
-| Integration | Usually centered on an MCP server | Codex plugin + MCP server + skills + lifecycle hooks |
+| Main goal | Store and search facts, notes, or conversation snippets | Restore trustworthy, governable context for AI agents |
+| Integration | Usually centered on an MCP server | Standard MCP baseline plus Codex plugin, Skills, and lifecycle Hooks |
 | Memory model | Often generic key/value, documents, or graph entries | Profile, preference, relationship, ongoing work, episode, stable decision |
 | Automatic extraction | Sometimes supported, often broad | Conservative by default, only from explicit signals |
 | Correction | Usually update or delete | Supports wrong/stale status, correction history, and explanation |
@@ -61,5 +61,5 @@ If you only need a simple note store or generic vector search, CP Memory may be 
 
 - No graphical review UI yet.
 - Manual real-Codex-desktop Hook-injection testing on macOS/Linux still awaits suitable devices.
-- The main experience targets Codex; other clients are not the priority.
+- Standard MCP provides the cross-client baseline; the Codex plugin adds Skills and lifecycle Hooks as an enhanced experience.
 - Automatic extraction is intentionally conservative, so it will not turn every chat message into long-term memory.

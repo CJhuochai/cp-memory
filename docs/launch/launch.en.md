@@ -2,15 +2,15 @@
 
 ## Title
 
-CP Memory: local-first, explainable memory for Codex project rules
+CP Memory: local-first, governable memory for AI coding agents
 
 ## Post
 
-Starting a new Codex session should not mean re-explaining your project rules, preferences, and earlier decisions.
+Starting a new AI coding session should not mean re-explaining your project rules, preferences, and earlier decisions.
 
 I built CP Memory to restore useful context in later sessions. The harder problem turned out not to be whether an AI can remember, but what happens when it remembers the wrong thing.
 
-CP Memory does not try to retain every chat message. It stores rules, preferences, ongoing work, and decisions in local SQLite storage, then restores relevant context through Codex MCP tools and lifecycle hooks. It also supports explanation, correction, expiry, and scope rather than silently overwriting a bad record.
+CP Memory does not try to retain every chat message. It stores rules, preferences, ongoing work, and decisions in local SQLite storage, then restores relevant context through a standard stdio MCP server. The Codex plugin adds Skills and lifecycle Hooks as an enhanced experience. Memory can be explained, corrected, expired, and scoped instead of silently overwritten.
 
 A minimal example:
 
@@ -18,7 +18,7 @@ A minimal example:
 Remember this: before releasing this project, create a branch, run tests, and merge through a PR.
 ```
 
-In a later session for the same project, Codex can restore that rule and continue following it. If the rule is no longer valid, it can be marked wrong, stale, or limited to a specific scope.
+In a later session for the same project, an AI coding agent can restore that rule and continue following it. If the rule is no longer valid, it can be marked wrong, stale, or limited to a specific scope.
 
 The design principles are deliberately conservative:
 
@@ -27,7 +27,7 @@ The design principles are deliberately conservative:
 - Explainable: a remembered rule needs a reason and provenance.
 - Correctable: wrong and stale memory need governance history, not just deletion.
 
-CP Memory is an open-source Codex plugin. Windows can install it through GitHub Marketplace; macOS/Linux have a source installation path with three-platform CI coverage. It does not have a graphical review UI yet. Its current pending-review reminder is injected into assistant context, not shown as a user-facing popup.
+CP Memory is an open-source MCP memory server with an enhanced Codex plugin. The currently verified distribution paths are Codex Marketplace on Windows and the source installer on macOS/Linux, with three-platform CI coverage. Standard one-command MCP packaging is in progress and will be advertised only after isolated validation. CP Memory does not have a graphical review UI yet; its current pending-review reminder is injected into assistant context, not shown as a user-facing popup.
 
 Repository, installation instructions, and a sanitized 30-second demo script:
 
