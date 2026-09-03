@@ -136,7 +136,7 @@ Run a local Markdown-link scan for both files, confirm every relative target exi
 - [x] **Step 5: Commit**
 
 ```powershell
-git add README.md README.zh-CN.md README.en.md
+git add README.md README.zh-CN.md
 git commit -m "docs: make the repository landing page English first"
 ```
 
@@ -193,7 +193,7 @@ git commit -m "docs: align MCP and Codex positioning"
 - Consumes: all Stage 1 commits.
 - Produces: evidence that documentation changes did not affect runtime, installation, or memory behavior.
 
-- [ ] **Step 1: Run repository checks**
+- [x] **Step 1: Run repository checks**
 
 ```powershell
 git diff main...HEAD --check
@@ -203,7 +203,7 @@ rg -n "C:\\Users|token|password|README\.en\.md" assets README.md README.zh-CN.md
 
 Review every match; generic safety guidance is allowed, private values are not.
 
-- [ ] **Step 2: Run required verification**
+- [x] **Step 2: Run required verification**
 
 ```powershell
 python -m unittest discover -s tests -p test_cp_memory.py
@@ -213,7 +213,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 
 Expected: 50/50 unit tests, 20/20 benchmark cases, and 8/8 isolated installer steps pass.
 
-- [ ] **Step 3: Audit final scope**
+- [x] **Step 3: Audit final scope**
 
 ```powershell
 git diff --stat main...HEAD
