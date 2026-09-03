@@ -41,7 +41,7 @@ codex plugin add cp-memory@cp-memory
 
 安装后重启 Codex；如果出现提示，请确认信任生命周期 Hooks。
 
-> **通用 MCP 状态：**CP Memory 已经提供 stdio MCP server。面向其他 MCP 客户端的一键安装包是下一阶段交付内容；在干净环境的握手和记忆冒烟通过前，README 不会提前宣传该命令。
+> **通用 MCP 状态：**仓库现已包含 `cp-memory-mcp` Python 包，并在干净环境中完成验证。只有在包上传 PyPI 且从公开仓库完成冒烟后，才会正式记录 `uvx cp-memory-mcp` 命令。
 
 ## 30 秒看到结果
 

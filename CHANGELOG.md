@@ -2,6 +2,13 @@
 
 ## 中文
 
+### v1.8.0
+
+- 新增标准 Python 发行包 `cp-memory-mcp` 和控制台入口 `cp-memory-mcp`，为通用 MCP 客户端提供可移植基础。
+- 保留现有 Codex 插件入口和默认数据库位置，无需迁移已有 `~/.cp-memory/memory.db`。
+- 新增干净虚拟环境中的 wheel/sdist 构建、40 个 MCP 工具握手及写入/检索/纠错冒烟验证，并接入三平台 CI。
+- PyPI 上传与公开 `uvx` 命令将在合并后单独验证；本次准备不提前声明线上包可用。
+
 ### v1.7.2
 
 - 修复公开 Marketplace 的仓库内插件定位：marketplace 清单改用 `source: "local"` 与根目录路径 `"."`。
@@ -65,6 +72,13 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.8.0
+
+- Added the standard `cp-memory-mcp` Python distribution and `cp-memory-mcp` console entry point as the portable baseline for general MCP clients.
+- Preserved the existing Codex plugin entry point and default database location; existing `~/.cp-memory/memory.db` files need no migration.
+- Added clean-venv wheel/sdist builds, a 40-tool MCP handshake, and write/search/correct smoke coverage to the three-platform CI matrix.
+- PyPI upload and the public `uvx` command will be verified separately after merge; this preparation does not claim that the online package is available yet.
 
 ### v1.7.2
 

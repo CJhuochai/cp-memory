@@ -41,7 +41,7 @@ codex plugin add cp-memory@cp-memory
 
 Restart Codex after installation and approve the lifecycle Hooks if prompted.
 
-> **Portable MCP status:** CP Memory already exposes a stdio MCP server. A verified one-command package for other MCP clients is the next delivery stage; this README will not advertise that command until its clean-environment handshake and memory smoke tests pass.
+> **Portable MCP status:** This repository now includes the `cp-memory-mcp` Python package and validates it in a clean environment. The public `uvx cp-memory-mcp` command will be documented only after the package is uploaded to PyPI and smoke-tested from the registry.
 
 ## See The Result In 30 Seconds
 

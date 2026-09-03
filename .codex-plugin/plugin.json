@@ -1,7 +1,7 @@
 {
   "name": "cp-memory",
-  "version": "1.7.2",
-  "description": "CP Memory 是 Codex 的本地优先、可审阅记忆层：通过 MCP、生命周期 hooks 和治理工具恢复可信上下文。 / CP Memory is a local-first, reviewable memory layer for Codex: restore trustworthy context through MCP, lifecycle hooks, and governance tools.",
+  "version": "1.8.0",
+  "description": "CP Memory 是面向 AI Agent 的本地优先、可治理 MCP 记忆层，Codex 插件额外提供 Skills 和生命周期 Hooks。 / CP Memory is a local-first, governable MCP memory layer for AI agents, with Skills and lifecycle Hooks added by the Codex plugin.",
   "author": {
     "name": "Chen Jian"
   },
