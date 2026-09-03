@@ -4,7 +4,7 @@
 
 **Goal:** Make the GitHub landing page immediately useful to international AI Agent and MCP developers without changing CP Memory runtime behavior.
 
-**Architecture:** Keep the current documentation content and assets as the source of truth, swap the default README language, and tighten the first screen around one verified Codex installation path. Add deterministic, sanitized visual assets and documentation contract tests so later packaging work can replace the install path without silently regressing language links, CI evidence, or privacy boundaries.
+**Architecture:** Reuse the current bilingual content and demo scenario, swap the default README language, and tighten the first screen around the currently verified Codex installation. Add sanitized visual assets; verify human-facing documentation with link, image, privacy, and visual checks rather than brittle prose unit tests.
 
 **Tech Stack:** Markdown, SVG, GIF/PNG assets, Python `unittest`, GitHub Actions badges
 
@@ -13,96 +13,28 @@
 ## Global Constraints
 
 - Existing Codex Marketplace and source-install commands keep working.
-- Existing `.mcp.json`, Skills, and Hooks keep their behavior.
-- All existing 40 MCP tools keep compatible names and parameters in the default full mode.
-- Existing databases require no migration; standard MCP and the Codex plugin use the same `~/.cp-memory/memory.db` by default.
+- Existing `.mcp.json`, Skills, Hooks, 40 MCP tools, and `~/.cp-memory/memory.db` behavior stay unchanged.
 - Existing Windows, macOS, and Linux CI stays green.
-- All user-facing and maintainer-facing documentation must carry equivalent English and Chinese information.
-- No real database, logs, tokens, private summaries, local paths, or local configuration may appear in visual assets or commits.
+- English and Chinese user-facing documentation carry equivalent information.
+- Visuals contain no real database, logs, tokens, private summaries, local paths, or local configuration.
+- Do not advertise `uvx cp-memory-mcp` before Stage 2 validates and publishes the package.
 
 ---
 
-### Task 1: Landing-page contract test
-
-**Files:**
-- Modify: `tests/test_cp_memory.py`
-- Test: `tests/test_cp_memory.py`
-
-**Interfaces:**
-- Consumes: repository files rooted at the existing `PLUGIN_HOME` constant.
-- Produces: `CpMemoryTests.test_readme_is_english_first_and_bilingual()` and `CpMemoryTests.test_readme_visual_assets_are_publishable()`.
-
-- [ ] **Step 1: Write the failing language and evidence test**
-
-Add constants beside the existing repository-path constants:
-
-```python
-README_FILE = PLUGIN_HOME / "README.md"
-README_ZH_FILE = PLUGIN_HOME / "README.zh-CN.md"
-DEMO_GIF = PLUGIN_HOME / "assets" / "demo.gif"
-SOCIAL_PREVIEW = PLUGIN_HOME / "assets" / "social-preview.png"
-```
-
-Add this test to `CpMemoryTests`:
-
-```python
-def test_readme_is_english_first_and_bilingual(self):
-    english = README_FILE.read_text(encoding="utf-8")
-    chinese = README_ZH_FILE.read_text(encoding="utf-8")
-    self.assertIn("Local-first, governable memory for AI coding agents", english)
-    self.assertIn('<a href="README.zh-CN.md">简体中文</a> | English', english)
-    self.assertIn('简体中文 | <a href="README.md">English</a>', chinese)
-    self.assertIn("actions/workflows/cross-platform.yml/badge.svg", english)
-    self.assertIn("assets/demo.gif", english)
-    self.assertIn("assets/demo.gif", chinese)
-    self.assertNotIn("CI-Windows%20%7C%20macOS%20%7C%20Linux-success.svg", english)
-```
-
-- [ ] **Step 2: Write the failing visual validation test**
-
-Add a standard-library-only header and size check:
-
-```python
-def test_readme_visual_assets_are_publishable(self):
-    self.assertEqual(DEMO_GIF.read_bytes()[:6], b"GIF89a")
-    preview = SOCIAL_PREVIEW.read_bytes()
-    self.assertEqual(preview[:8], b"\x89PNG\r\n\x1a\n")
-    self.assertLess(DEMO_GIF.stat().st_size, 10 * 1024 * 1024)
-    self.assertLess(SOCIAL_PREVIEW.stat().st_size, 1024 * 1024)
-```
-
-- [ ] **Step 3: Run the focused tests and verify failure**
-
-Run:
-
-```powershell
-python -m unittest tests.test_cp_memory.CpMemoryTests.test_readme_is_english_first_and_bilingual tests.test_cp_memory.CpMemoryTests.test_readme_visual_assets_are_publishable
-```
-
-Expected: both tests fail because `README.zh-CN.md`, `assets/demo.gif`, and `assets/social-preview.png` do not exist.
-
-- [ ] **Step 4: Commit the failing contract**
-
-```powershell
-git add tests/test_cp_memory.py
-git commit -m "test: define international landing page contract"
-```
-
-### Task 2: Sanitized visual assets
+### Task 1: Sanitized visual assets
 
 **Files:**
 - Create: `assets/demo.gif`
 - Create: `assets/social-preview.svg`
 - Create: `assets/social-preview.png`
-- Test: `tests/test_cp_memory.py`
 
 **Interfaces:**
-- Consumes: `assets/logo.png`, the fictional `demo-plugin` scenario in `docs/30-second-demo.md`, and the size/header assertions from Task 1.
-- Produces: a three-scene animated GIF referenced by both READMEs and a 1280×640 social-preview PNG suitable for GitHub Repository Settings.
+- Consumes: `assets/logo.png` and the fictional `demo-plugin` scenario in `docs/30-second-demo.md`.
+- Produces: a looping 1200×675 demo GIF and a 1280×640 social-preview PNG.
 
-- [ ] **Step 1: Add the social-preview SVG source**
+- [ ] **Step 1: Create the social-preview SVG source**
 
-Create a 1280×640 SVG with this exact visible copy:
+Use the existing dark-blue visual language from `assets/architecture.svg` with this exact visible copy:
 
 ```text
 CP Memory
@@ -111,15 +43,9 @@ Remember • Recall • Correct
 MCP baseline · Codex enhanced
 ```
 
-Use the existing dark-blue visual language from `assets/architecture.svg`, high-contrast text, and no local or personal data.
+- [ ] **Step 2: Render publishable raster assets**
 
-- [ ] **Step 2: Render the social-preview PNG**
-
-Render `assets/social-preview.svg` to `assets/social-preview.png` at 1280×640 using the available local image renderer. Verify the PNG signature, dimensions, and size below 1 MB.
-
-- [ ] **Step 3: Render the three-scene demo GIF**
-
-Create a 1200×675 animated GIF with three sanitized scenes and these exact captions:
+Render `assets/social-preview.svg` to `assets/social-preview.png`. Generate three `demo-plugin` scenes from the existing demo script and combine them into `assets/demo.gif` with these captions:
 
 ```text
 1. Remember a project rule locally
@@ -127,50 +53,41 @@ Create a 1200×675 animated GIF with three sanitized scenes and these exact capt
 3. Correct bad memory without hiding history
 ```
 
-Use only the fictional project name `demo-plugin` and the release rule from `docs/30-second-demo.md`. Keep the file below 10 MB and loop continuously.
+Keep the PNG below 1 MB and the GIF below 10 MB.
 
-- [ ] **Step 4: Run the focused visual test**
+- [ ] **Step 3: Validate and visually inspect**
 
-```powershell
-python -m unittest tests.test_cp_memory.CpMemoryTests.test_readme_visual_assets_are_publishable
-```
+Use an image decoder to confirm format and exact dimensions, then open both raster assets and check readable text, framing, animation, and privacy.
 
-Expected: PASS.
-
-- [ ] **Step 5: Visually inspect both assets**
-
-Open `assets/demo.gif` and `assets/social-preview.png`; confirm readable text, correct framing, no clipping, and no personal data.
-
-- [ ] **Step 6: Commit the assets**
+- [ ] **Step 4: Commit**
 
 ```powershell
 git add assets/demo.gif assets/social-preview.svg assets/social-preview.png
 git commit -m "docs: add sanitized launch visuals"
 ```
 
-### Task 3: English-first bilingual README
+### Task 2: English-first bilingual README
 
 **Files:**
 - Rename: `README.md` to `README.zh-CN.md`
 - Rename: `README.en.md` to `README.md`
 - Modify: `README.md`
 - Modify: `README.zh-CN.md`
-- Test: `tests/test_cp_memory.py`
 
 **Interfaces:**
-- Consumes: the current equivalent README content, verified Codex installation commands, and Task 2 visual paths.
-- Produces: the English default landing page and an equivalent Chinese translation.
+- Consumes: current bilingual README content, verified Codex installation commands, and Task 1 assets.
+- Produces: an English default landing page and an equivalent Chinese translation.
 
-- [ ] **Step 1: Rename the README files without losing history**
+- [ ] **Step 1: Rename without losing Git history**
 
 ```powershell
 git mv README.md README.zh-CN.md
 git mv README.en.md README.md
 ```
 
-- [ ] **Step 2: Replace the English first screen**
+- [ ] **Step 2: Replace both hero sections**
 
-Use this exact value proposition and language navigation:
+English:
 
 ```html
 <p align="center">
@@ -183,17 +100,7 @@ Use this exact value proposition and language navigation:
 </p>
 ```
 
-Replace the static CI badge with:
-
-```markdown
-[![Cross-platform CI](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg)](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml)
-```
-
-Show `assets/demo.gif` immediately after a three-bullet “Why CP Memory” section. Keep the currently verified Codex Marketplace command as the only hero install path and label it `Codex (enhanced integration)`. Do not mention `uvx` until Stage 2 validates the package.
-
-- [ ] **Step 3: Apply equivalent Chinese copy**
-
-Use this exact translated value proposition and navigation:
+Chinese:
 
 ```html
 <p align="center">
@@ -206,28 +113,34 @@ Use this exact translated value proposition and navigation:
 </p>
 ```
 
-Use the same badge, demo, section order, installation facts, platform caveats, and security boundaries as the English page.
+Replace the static CI badge in both files with:
 
-- [ ] **Step 4: Clarify portable MCP versus Codex enhancement**
-
-In both languages, state the current boundary exactly: CP Memory already exposes a stdio MCP server, but the verified packaged install is currently the Codex plugin/source installer; standard one-command MCP packaging arrives in the next delivery stage. Describe Codex Skills and lifecycle Hooks as enhancements, not requirements of the memory model.
-
-- [ ] **Step 5: Run the focused language test**
-
-```powershell
-python -m unittest tests.test_cp_memory.CpMemoryTests.test_readme_is_english_first_and_bilingual
+```markdown
+[![Cross-platform CI](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml/badge.svg)](https://github.com/CJhuochai/cp-memory/actions/workflows/cross-platform.yml)
 ```
 
-Expected: PASS.
+- [ ] **Step 3: Tighten the first screen**
 
-- [ ] **Step 6: Commit the README landing page**
+Before architecture detail, show only:
+
+1. Three differentiators: local first, governable memory, Codex-enhanced.
+2. `assets/demo.gif`.
+3. The verified Codex Marketplace install command labeled as enhanced integration.
+
+State bilingually that CP Memory already exposes a stdio MCP server, standard one-command packaging comes next, and Codex Skills/Hooks are enhancements rather than requirements of the memory model.
+
+- [ ] **Step 4: Verify README resources**
+
+Run a local Markdown-link scan for both files, confirm every relative target exists, confirm the dynamic workflow badge URL, and review the rendered first screen.
+
+- [ ] **Step 5: Commit**
 
 ```powershell
 git add README.md README.zh-CN.md README.en.md
 git commit -m "docs: make the repository landing page English first"
 ```
 
-### Task 4: Align linked documentation
+### Task 3: Align linked documentation
 
 **Files:**
 - Modify: `CONTRIBUTING.md`
@@ -236,76 +149,61 @@ git commit -m "docs: make the repository landing page English first"
 - Modify: `docs/30-second-demo.md`
 - Modify: `docs/launch/launch.en.md`
 - Modify: `docs/launch/launch.zh-CN.md`
-- Test: `tests/test_cp_memory.py`
 
 **Interfaces:**
-- Consumes: the positioning and language filenames from Task 3.
-- Produces: documentation that consistently treats standard MCP as the portable baseline and Codex as the enhanced integration.
+- Consumes: README filenames and portable-MCP positioning from Task 2.
+- Produces: consistent bilingual contributor, comparison, roadmap, demo, and launch guidance.
 
-- [ ] **Step 1: Update maintainer language-file guidance**
+- [ ] **Step 1: Update README filename guidance**
 
-Change `CONTRIBUTING.md` so README changes keep `README.md` and `README.zh-CN.md` equivalent; remove `README.en.md` as the English filename.
+Change `CONTRIBUTING.md` so README changes keep `README.md` and `README.zh-CN.md` equivalent.
 
-- [ ] **Step 2: Update positioning documents bilingually**
+- [ ] **Step 2: Update positioning bilingually**
 
-Replace claims that other clients are not a priority with these equivalent boundaries:
+Use these equivalent boundaries in comparison, roadmap, and launch documents:
 
 ```text
 中文：标准 MCP 提供跨客户端基础能力；Codex 插件额外提供 Skills 和生命周期 Hooks 增强体验。
 English: Standard MCP provides the cross-client baseline; the Codex plugin adds Skills and lifecycle Hooks as an enhanced experience.
 ```
 
-Keep the existing disclosure that macOS/Linux Codex desktop Hook injection has not received real-device manual smoke testing.
+Retain the existing real-device macOS/Linux Codex desktop Hook caveat.
 
-- [ ] **Step 3: Make the demo script match the generated asset**
+- [ ] **Step 3: Align the demo script**
 
-Keep the three existing scenes but add the exact English captions from Task 2 and their equivalent Chinese captions. Link to `../assets/demo.gif` from `docs/30-second-demo.md`.
+Link `../assets/demo.gif` from `docs/30-second-demo.md` and add the three Task 1 captions plus equivalent Chinese captions to the existing scenes.
 
-- [ ] **Step 4: Add a broken-link filename assertion**
+- [ ] **Step 4: Verify links and stale names**
 
-Extend `test_readme_is_english_first_and_bilingual()`:
+Confirm all changed relative Markdown targets exist. `README.en.md` must remain only in historical design/plan documents, not current user or contributor guidance.
 
-```python
-for path in (PLUGIN_HOME / "CONTRIBUTING.md", PLUGIN_HOME / "docs" / "comparison.md"):
-    self.assertNotIn("README.en.md", path.read_text(encoding="utf-8"))
-```
-
-- [ ] **Step 5: Run the focused test and full regression**
+- [ ] **Step 5: Commit**
 
 ```powershell
-python -m unittest tests.test_cp_memory.CpMemoryTests.test_readme_is_english_first_and_bilingual
-python -m unittest discover -s tests -p test_cp_memory.py
-```
-
-Expected: focused test passes and all 52 tests pass.
-
-- [ ] **Step 6: Commit documentation alignment**
-
-```powershell
-git add CONTRIBUTING.md docs/comparison.md docs/roadmap.md docs/30-second-demo.md docs/launch/launch.en.md docs/launch/launch.zh-CN.md tests/test_cp_memory.py
+git add CONTRIBUTING.md docs/comparison.md docs/roadmap.md docs/30-second-demo.md docs/launch/launch.en.md docs/launch/launch.zh-CN.md
 git commit -m "docs: align MCP and Codex positioning"
 ```
 
-### Task 5: Stage acceptance
+### Task 4: Stage acceptance
 
 **Files:**
-- Verify: all tracked files changed by Tasks 1–4
+- Verify: all tracked files changed by Tasks 1–3
 
 **Interfaces:**
 - Consumes: all Stage 1 commits.
-- Produces: evidence that the landing-page changes do not affect CP Memory runtime, installation, or memory behavior.
+- Produces: evidence that documentation changes did not affect runtime, installation, or memory behavior.
 
-- [ ] **Step 1: Run whitespace and privacy checks**
+- [ ] **Step 1: Run repository checks**
 
 ```powershell
 git diff main...HEAD --check
 git status --short
-rg -n "C:\\Users|token|password|memory\.db" assets README.md README.zh-CN.md docs
+rg -n "C:\\Users|token|password|README\.en\.md" assets README.md README.zh-CN.md CONTRIBUTING.md docs
 ```
 
-Review matches and confirm every remaining `memory.db` mention is generic documentation rather than a real file or path.
+Review every match; generic safety guidance is allowed, private values are not.
 
-- [ ] **Step 2: Run the required verification suite**
+- [ ] **Step 2: Run required verification**
 
 ```powershell
 python -m unittest discover -s tests -p test_cp_memory.py
@@ -313,9 +211,9 @@ python tests\personal_memory_benchmark.py
 powershell -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 ```
 
-Expected: 52/52 unit tests, 20/20 benchmark cases, and 8/8 isolated installer steps pass.
+Expected: 50/50 unit tests, 20/20 benchmark cases, and 8/8 isolated installer steps pass.
 
-- [ ] **Step 3: Inspect the final diff and commit state**
+- [ ] **Step 3: Audit final scope**
 
 ```powershell
 git diff --stat main...HEAD
@@ -323,4 +221,4 @@ git log --oneline main..HEAD
 git status --short --branch
 ```
 
-Expected: only the approved specification, implementation plan, bilingual landing-page documentation, tests, and sanitized assets differ from `main`; the worktree is clean.
+Expected: only the approved specification, implementation plan, bilingual landing-page documentation, and sanitized assets differ from `main`; the worktree is clean.
