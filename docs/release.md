@@ -74,7 +74,11 @@ git tag vX.Y.Z
 git push origin main --tags
 ```
 
-5. 验证远程 marketplace。
+5. 通过 PyPI Trusted Publisher 发布标准 Python 包。
+
+首次发布时，在 PyPI 创建待定发布者：项目名 `cp-memory-mcp`、Owner `CJhuochai`、仓库 `cp-memory`、工作流 `publish-pypi.yml`，Environment 留空。配置完成后，在 GitHub Actions 的 `Publish Python package` 工作流中从 `main` 手动运行；后续 GitHub Release 发布会自动触发同一工作流。仓库不保存长期 PyPI Token。
+
+6. 验证远程 marketplace。
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
@@ -161,7 +165,11 @@ git tag vX.Y.Z
 git push origin main --tags
 ```
 
-5. Verify the remote marketplace.
+5. Publish the standard Python package through PyPI Trusted Publishing.
+
+For the first release, create a pending publisher on PyPI with project name `cp-memory-mcp`, owner `CJhuochai`, repository `cp-memory`, workflow `publish-pypi.yml`, and a blank Environment. Then manually run the `Publish Python package` GitHub Actions workflow from `main`. Future GitHub Release publications trigger the same workflow automatically. The repository stores no long-lived PyPI token.
+
+6. Verify the remote marketplace.
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
