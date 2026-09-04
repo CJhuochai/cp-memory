@@ -6,6 +6,8 @@
 
 <!-- mcp-name: io.github.CJhuochai/cp-memory -->
 
+可复现的打包、协议和记忆恢复检查见[验证证据与边界](docs/verification.md)。
+
 <p align="center">
   面向 AI 编码 Agent 的本地优先、可治理记忆层。<br>
   跨会话记住项目规则，只恢复当前相关内容，纠正错误记忆时保留历史。

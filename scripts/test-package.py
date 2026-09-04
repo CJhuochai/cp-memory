@@ -33,7 +33,7 @@ def result_json(result):
     return json.loads(result.content[0].text)
 
 
-async def verify_mcp(command, memory_home):
+async def verify_mcp(command, memory_home, report=None):
     env = {
         **os.environ,
         "CP_MEMORY_HOME": str(memory_home),
@@ -44,12 +44,20 @@ async def verify_mcp(command, memory_home):
     async with stdio_client(params) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
-            names = {tool.name for tool in (await session.list_tools()).tools}
+            listed = await session.list_tools()
+            names = {tool.name for tool in listed.tools}
+            calls = []
+
+            async def call_tool(name, arguments):
+                result = await session.call_tool(name, arguments=arguments)
+                result_json(result)
+                calls.append(name)
+                return result
             required = {"memory_add", "memory_search", "memory_correct", "memory_recall"}
             if len(names) != 40 or not required.issubset(names):
                 raise AssertionError(f"unexpected tool surface: {len(names)} tools; missing {required - names}")
             added = result_json(
-                await session.call_tool(
+                await call_tool(
                     "memory_add",
                     arguments={
                         "entity": "PackageSmoke",
@@ -58,17 +66,29 @@ async def verify_mcp(command, memory_home):
                     },
                 )
             )
-            rows = result_json(await session.call_tool("memory_search", arguments={"query": "PackageSmoke"}))
+            rows = result_json(await call_tool("memory_search", arguments={"query": "PackageSmoke"}))
             if added["id"] not in {row["id"] for row in rows}:
                 raise AssertionError("installed server did not find the written memory")
             corrected = result_json(
-                await session.call_tool(
+                await call_tool(
                     "memory_correct",
                     arguments={"id": added["id"], "status": "wrong", "reason": "package smoke cleanup"},
                 )
             )
             if not corrected.get("ok") or corrected.get("status") != "wrong":
                 raise AssertionError(f"installed server did not correct memory: {corrected}")
+            if report is not None:
+                def utf8_bytes(value):
+                    return len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+                tools = [tool.model_dump(mode="json", exclude_none=True) for tool in listed.tools]
+                report.update({
+                    "tools_list_payload_utf8_bytes": utf8_bytes({"tools": tools}),
+                    "input_schemas_utf8_bytes": sum(utf8_bytes(tool["inputSchema"]) for tool in tools),
+                    "successful_tool_calls": calls,
+                    "tool_call_count": len(calls),
+                    "model_selection_success_rate": None,
+                })
             return len(names)
 
 
@@ -100,7 +120,11 @@ def main():
         command = console_script(environment)
         if not command.is_file():
             raise AssertionError(f"console script is missing: {command}")
-        tool_count = asyncio.run(verify_mcp(command, temp / "memory"))
+        report = {}
+        tool_count = asyncio.run(verify_mcp(command, temp / "memory", report))
+        assert report["successful_tool_calls"] == ["memory_add", "memory_search", "memory_correct"]
+        assert report["tool_call_count"] == 3
+        assert 0 < report["input_schemas_utf8_bytes"] < report["tools_list_payload_utf8_bytes"]
         print(
             json.dumps(
                 {
@@ -109,6 +133,7 @@ def main():
                     "sdist": sdists[0].name,
                     "tool_count": tool_count,
                     "write_search_correct": True,
+                    "protocol_measurements": report,
                 },
                 indent=2,
             )
