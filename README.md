@@ -26,6 +26,8 @@
 
 ## Why CP Memory
 
+For reproducible package, protocol and recall checks, see [verification evidence and limits](docs/verification.md).
+
 - **Local first:** memory stays in `~/.cp-memory/memory.db` by default.
 - **Governable:** inspect, review, correct, scope, or retire memory instead of silently overwriting it.
 - **MCP-ready, Codex-enhanced:** the stdio MCP server is the portable baseline; the Codex plugin adds Skills and lifecycle Hooks.
