@@ -13,7 +13,7 @@ The portable server command is:
 uvx cp-memory-mcp
 ```
 
-It was verified from public PyPI with a clean `uv` cache through MCP initialization, all 40 tools, and a write/search/correct flow. The examples below use each client's documented stdio configuration format; client-specific UI discovery and approval screens remain pending manual testing because those clients are not installed on the verification machine.
+It was verified from public PyPI with a clean `uv` cache through MCP initialization, all 40 tools, and a write/search/correct flow. The examples below use each client's documented stdio configuration format. Codex CLI acceptance is described below; other clients are not installed on the verification machine, and client-specific UI discovery and approval screens remain pending manual testing.
 
 ### Codex
 
@@ -22,7 +22,11 @@ codex mcp add cp-memory -- uvx cp-memory-mcp
 codex mcp get cp-memory
 ```
 
-The command shape was checked against the installed Codex CLI. Codex plugin users can keep the Marketplace installation instead to receive lifecycle Hooks and Skills in addition to MCP tools.
+The command shape was checked against the installed Codex CLI. On 2026-09-04, four independent Windows Codex CLI 0.140.0 sessions verified the published `cp-memory-mcp==1.8.1` package: write a synthetic memory, recall it in a fresh session, correct its value, then recall and restore the corrected value in another fresh session. Both final results contained the new value, not the old one. The six successful MCP calls were `memory_add`, `memory_recall`, `memory_probe`, `memory_correct`, `memory_recall`, and `memory_restore_context`.
+
+This acceptance run used a temporary database with explicit `CP_MEMORY_HOME`, `CP_MEMORY_DB_PATH`, and `CP_MEMORY_OLD_HOME` overrides, ephemeral sessions, and disabled plugins, hooks, and auxiliary memories. The recall calls set `allow_auxiliary=false`. The initial non-interactive write was cancelled by client approval; the successful run used user-authorized, invocation-only approval for the test server. It did not change the user's permanent configuration. This proves a guided CLI workflow, not unattended default approval, desktop UI behavior, other clients, or a general model accuracy rate. To repeat it, use four fresh sessions against the same isolated database and do not include the expected value in either recall prompt.
+
+Codex plugin users can keep the Marketplace installation instead to receive lifecycle Hooks and Skills in addition to MCP tools.
 
 ### Claude Code
 
@@ -95,7 +99,7 @@ Official format references: [Claude Code MCP](https://docs.anthropic.com/en/docs
 uvx cp-memory-mcp
 ```
 
-该命令已从公开 PyPI 使用干净的 `uv` 缓存完成 MCP 初始化、40 个工具以及写入/检索/纠正链路验证。下列示例采用各客户端官方记录的 stdio 配置格式；由于验收机器未安装这些客户端，其界面中的发现和授权步骤仍标记为待手工实测。
+该命令已从公开 PyPI 使用干净的 `uv` 缓存完成 MCP 初始化、40 个工具以及写入/检索/纠正链路验证。下列示例采用各客户端官方记录的 stdio 配置格式。Codex CLI 验收见下文；验收机器未安装其他客户端，各客户端界面中的发现和授权步骤仍标记为待手工实测。
 
 ### Codex
 
@@ -104,7 +108,11 @@ codex mcp add cp-memory -- uvx cp-memory-mcp
 codex mcp get cp-memory
 ```
 
-命令格式已通过当前安装的 Codex CLI 帮助信息核对。Codex 插件用户可以继续使用 Marketplace 安装，以便在 MCP 工具之外获得生命周期 Hooks 和 Skills。
+命令格式已通过当前安装的 Codex CLI 帮助信息核对。2026-09-04 使用四个独立的 Windows Codex CLI 0.140.0 会话验证了公开发布的 `cp-memory-mcp==1.8.1`：写入合成记忆、新会话召回、纠正记忆值，再开新会话召回并恢复纠正后的值。最后两项结果均包含新值，不包含旧值。六次成功的 MCP 调用依次为 `memory_add`、`memory_recall`、`memory_probe`、`memory_correct`、`memory_recall` 和 `memory_restore_context`。
+
+本次验收显式覆盖 `CP_MEMORY_HOME`、`CP_MEMORY_DB_PATH` 和 `CP_MEMORY_OLD_HOME`，使用临时数据库及不持久化的会话，并禁用插件、Hooks 和辅助记忆。召回调用设置 `allow_auxiliary=false`。首次非交互写入被客户端审批取消；成功运行时，经用户授权，仅对该次调用中的测试服务器预先批准工具调用，没有修改用户永久配置。这证明的是受指导的 CLI 流程，不代表默认无需审批、桌面界面行为、其他客户端或总体模型准确率。复验时应使用同一个隔离数据库启动四个全新会话，并且不要在两次召回提示中包含预期值。
+
+Codex 插件用户可以继续使用 Marketplace 安装，以便在 MCP 工具之外获得生命周期 Hooks 和 Skills。
 
 ### Claude Code
 
