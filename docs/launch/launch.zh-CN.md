@@ -27,7 +27,7 @@
 - 可解释：知道一条记忆来自什么；
 - 可纠错：错误和过期不是简单删除，而是保留治理历史。
 
-CP Memory 是一个开源 MCP 记忆服务，并提供增强版 Codex 插件。当前已验证的分发路径是 Windows 的 Codex Marketplace 和 macOS/Linux 的源码安装器，并已有三端 CI 覆盖。标准 MCP 一键包仍在实现中，只有完成隔离验证后才会公开宣传。它还没有图形化审阅界面；当前待审阅提醒注入给助手上下文，不是用户可见弹窗。
+CP Memory 是一个开源 MCP 记忆服务，并提供增强版 Codex 插件。1.8.1 已发布到 [PyPI](https://pypi.org/project/cp-memory-mcp/1.8.1/)，并以 `io.github.CJhuochai/cp-memory` 注册到官方 MCP Registry。安装 Python 3.10+ 和 uv 后，可将 stdio MCP 客户端配置为运行 `uvx cp-memory-mcp`。公网干净缓存安装已通过 40 个工具握手及写入／查询／纠错冒烟。Windows 的 Codex Marketplace 和 macOS/Linux 的源码安装器仍受支持，并有三端 CI 覆盖；各客户端 UI 和审批流程尚未全部人工实测。它还没有图形化审阅界面；当前待审阅提醒注入给助手上下文，不是用户可见弹窗。
 
 仓库、安装方式与脱敏演示脚本：
 

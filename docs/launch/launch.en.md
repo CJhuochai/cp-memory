@@ -27,7 +27,7 @@ The design principles are deliberately conservative:
 - Explainable: a remembered rule needs a reason and provenance.
 - Correctable: wrong and stale memory need governance history, not just deletion.
 
-CP Memory is an open-source MCP memory server with an enhanced Codex plugin. The currently verified distribution paths are Codex Marketplace on Windows and the source installer on macOS/Linux, with three-platform CI coverage. Standard one-command MCP packaging is in progress and will be advertised only after isolated validation. CP Memory does not have a graphical review UI yet; its current pending-review reminder is injected into assistant context, not shown as a user-facing popup.
+CP Memory is an open-source MCP memory server with an enhanced Codex plugin. Version 1.8.1 is available on [PyPI](https://pypi.org/project/cp-memory-mcp/1.8.1/) and registered as `io.github.CJhuochai/cp-memory` in the official MCP Registry. With Python 3.10+ and uv installed, configure a stdio MCP client to run `uvx cp-memory-mcp`. A clean-cache public installation passed the 40-tool handshake and write/search/correct smoke test. Codex Marketplace on Windows and the source installer on macOS/Linux remain supported, with three-platform CI coverage. Client-specific UI and approval flows are not all manually verified. CP Memory does not have a graphical review UI yet; its current pending-review reminder is injected into assistant context, not shown as a user-facing popup.
 
 Repository, installation instructions, and a sanitized 30-second demo script:
 
