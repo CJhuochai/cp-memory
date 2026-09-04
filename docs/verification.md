@@ -13,7 +13,7 @@ python -X utf8 tests/personal_memory_benchmark.py
 
 On Windows, also run `powershell -ExecutionPolicy Bypass -File scripts/test-install.ps1`. On macOS/Linux, run `sh scripts/test-install.sh`. The [cross-platform workflow](../.github/workflows/cross-platform.yml) is the authoritative CI recipe.
 
-The package smoke builds wheel/sdist, installs the wheel in a fresh virtual environment, initializes the installed stdio server, checks 40 tools, and verifies a synthetic write/search/correct flow. Its temporary database does not read or modify your personal memory. The JSON report measures the actual tool-list payload using compact JSON encoded as UTF-8, and records successful tool calls at execution time. The three-call flow excludes initialize and tools/list; it is not a whole-agent conversation cost.
+The package smoke builds wheel/sdist, installs the wheel in a fresh virtual environment, initializes the installed stdio server, checks 40 tools, and verifies synthetic write/search/recall/correct/restore operations. It checks that the memory appears in restore context before correction and disappears after being marked wrong. Recall explicitly disables auxiliary memory. Its temporary database does not read or modify your personal memory. The JSON report measures the actual tool-list payload using compact JSON encoded as UTF-8, and records successful tool calls at execution time. The five-call flow excludes initialize and tools/list; it is not a whole-agent conversation cost.
 
 Bytes are not model tokens. These are scripted protocol checks, **not** an independent model tool-selection evaluation: `model_selection_success_rate` stays `null`. No claim of lower model cost or better selection follows from a smaller payload. Optional compact mode is not justified by size alone.
 
@@ -23,7 +23,7 @@ The personal-memory benchmark uses synthetic temporary data to check restore, co
 
 在源码目录中安装开发依赖后执行上述四条命令。Windows 另运行 `powershell -ExecutionPolicy Bypass -File scripts/test-install.ps1`；macOS/Linux 运行 `sh scripts/test-install.sh`。[跨平台工作流](../.github/workflows/cross-platform.yml) 是 CI 命令的权威来源。
 
-打包冒烟构建 wheel/sdist，在全新虚拟环境中安装 wheel，初始化已安装的 stdio 服务，检查 40 个工具，并验证合成数据的写入／查询／纠错。临时数据库不会读取或修改个人记忆。JSON 报告按紧凑 JSON 的 UTF-8 字节数测量实际工具清单，并在执行时记录成功调用。三次调用不包含 initialize 和 tools/list，也不代表完整 Agent 对话成本。
+打包冒烟构建 wheel/sdist，在全新虚拟环境中安装 wheel，初始化已安装的 stdio 服务，检查 40 个工具，并验证合成数据的写入／查询／召回／纠错／恢复。检查同一记忆在纠错前出现在恢复上下文中、标为 wrong 后不再注入。召回明确禁用辅助记忆。临时数据库不会读取或修改个人记忆。JSON 报告按紧凑 JSON 的 UTF-8 字节数测量实际工具清单，并在执行时记录成功调用。五次调用不包含 initialize 和 tools/list，也不代表完整 Agent 对话成本。
 
 字节数不是模型 token 数。这些是脚本协议检查，**不是**独立模型的工具选择评估，因此 `model_selection_success_rate` 保持 `null`。清单较小不能直接证明模型成本更低或选工具更准确；不能仅凭大小决定新增精简模式。
 
