@@ -12,7 +12,7 @@ from mcp.client.stdio import stdio_client
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "1.8.0"
+EXPECTED_VERSION = "1.8.1"
 
 
 def run(*args, cwd=None):

@@ -4,6 +4,8 @@
 
 <h1 align="center">CP Memory</h1>
 
+<!-- mcp-name: io.github.CJhuochai/cp-memory -->
+
 <p align="center">
   面向 AI 编码 Agent 的本地优先、可治理记忆层。<br>
   跨会话记住项目规则，只恢复当前相关内容，纠正错误记忆时保留历史。
@@ -30,9 +32,17 @@
 
 ![CP Memory 30 秒演示](assets/demo.gif)
 
-## 快速开始——Codex 增强集成
+## 快速开始——通用 MCP
 
-当前已经验证的一键路径是 Codex 插件：
+安装 Python 3.10+ 和 [`uv`](https://docs.astral.sh/uv/) 后，任意 stdio MCP 客户端均可通过以下命令启动 CP Memory：
+
+```text
+uvx cp-memory-mcp
+```
+
+公开软件包已使用干净缓存完成 MCP 握手、全部 40 个工具以及写入/检索/纠正链路验证。Codex、Claude Code、Cursor、VS Code 和 Gemini CLI 示例见 [MCP 客户端配置](docs/mcp-clients.md)。
+
+如需生命周期 Hooks 和 Skills 提供的 Codex 增强体验，请安装插件：
 
 ```powershell
 codex plugin marketplace add CJhuochai/cp-memory
@@ -40,8 +50,6 @@ codex plugin add cp-memory@cp-memory
 ```
 
 安装后重启 Codex；如果出现提示，请确认信任生命周期 Hooks。
-
-> **通用 MCP 状态：**仓库现已包含 `cp-memory-mcp` Python 包，并在干净环境中完成验证。只有在包上传 PyPI 且从公开仓库完成冒烟后，才会正式记录 `uvx cp-memory-mcp` 命令。
 
 ## 30 秒看到结果
 
@@ -88,6 +96,14 @@ CP Memory 会优先从本地主库恢复相关记忆，并让 Codex 按这条规
 如需录制 GIF、短视频或发布介绍，可直接使用脱敏的[30 秒演示脚本](docs/30-second-demo.md)。
 
 ## 安装
+
+任意 stdio MCP 客户端均可使用已经验证的公开软件包：
+
+```text
+uvx cp-memory-mcp
+```
+
+各客户端的命令和 JSON 配置见 [docs/mcp-clients.md](docs/mcp-clients.md)。
 
 Windows 推荐通过 GitHub Marketplace 安装：
 
