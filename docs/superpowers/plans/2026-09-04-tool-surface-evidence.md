@@ -10,6 +10,16 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-03-international-mcp-growth-design.md`
 
+## Status / 状态（2026-09-04）
+
+Implemented in PR #20. The checklist below records the original plan, not outstanding work. The final smoke executes **five** calls (write/search/recall/correct/restore), not the originally planned three. PR #22 subsequently added Codex CLI cross-session acceptance; see [verification](../../verification.md) and [client boundaries](../../mcp-clients.md).
+
+已在 PR #20 实现。以下清单保留原始计划，不代表待办事项。最终冒烟实际执行**五次**调用（写入／查询／召回／纠错／恢复），而非原计划的三次。PR #22 后续补充 Codex CLI 跨会话验收，见[验证说明](../../verification.md)和[客户端边界](../../mcp-clients.md)。
+
+The remaining evaluation scope concerns representative, repeatable model-selection evidence, not scripted protocol success. A small exploratory sample is not a general accuracy claim. Client UI and real macOS/Linux desktop Hook acceptance remain separate.
+
+剩余评估要求是有代表性、可重复的模型选择证据，而非脚本协议成功；小规模探索样本不代表总体准确率。客户端 UI 和真实 macOS/Linux 桌面 Hooks 验收仍需单独完成。
+
 ## Constraints / 约束
 
 Keep all 40 tools, hooks and database formats unchanged. No new dependencies, private data, telemetry or model calls. Documentation is bilingual.

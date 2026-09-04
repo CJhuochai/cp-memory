@@ -4,9 +4,12 @@
 
 这份路线图描述 CP Memory 接下来可能发展的方向。它不是承诺清单，而是帮助贡献者理解优先级和非目标。
 
-### 近期
+### 已完成（截至 2026-09-04）
 
-- 提供经过隔离验证的一键标准 MCP 安装包，并为常见 MCP 客户端补充最小配置。
+- v1.8.1 已提供标准 MCP 安装包、隔离安装验证和常见客户端最小配置，见[客户端指南](mcp-clients.md)。
+- 已提供合成数据的恢复、纠错与治理基准，以及 Codex CLI 跨会话验收；这不代表所有客户端 UI 或桌面 Hooks 均已验证，见[验证说明](verification.md)。
+
+### 近期
 - 在取得设备后完成 macOS/Linux 真实 Codex 桌面端 Hook 注入手工冒烟。
 - 研究让 GitHub Marketplace 在 POSIX 也能自动准备插件私有运行环境的最小兼容方案。
 - 增加更多脱敏示例，展示真实使用中的恢复、纠错和审阅流程。
@@ -34,9 +37,12 @@
 
 This roadmap describes possible directions for CP Memory. It is not a promise list; it helps contributors understand priorities and non-goals.
 
-### Near Term
+### Completed (as of 2026-09-04)
 
-- Provide an isolated-tested, one-command standard MCP package and minimal configuration for common MCP clients.
+- v1.8.1 provides the standard MCP package, isolated installation verification, and minimal client configurations; see the [client guide](mcp-clients.md).
+- Synthetic restore/correction/governance benchmarks and Codex CLI cross-session acceptance are available. This does not establish coverage of every client UI or desktop Hook; see [verification](verification.md).
+
+### Near Term
 - Complete manual real-Codex-desktop Hook-injection smoke testing on macOS/Linux when devices are available.
 - Investigate the smallest compatible way for GitHub Marketplace to provision the private plugin runtime on POSIX.
 - Add more sanitized examples showing real recall, correction, and review flows.

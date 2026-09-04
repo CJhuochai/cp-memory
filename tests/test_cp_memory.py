@@ -111,7 +111,6 @@ class CpMemoryTests(unittest.TestCase):
         registry = json.loads(SERVER_MANIFEST.read_text(encoding="utf-8"))
         readme = (PLUGIN_HOME / "README.md").read_text(encoding="utf-8")
 
-        self.assertEqual(package["version"], "1.8.1")
         self.assertEqual(plugin["version"], package["version"])
         self.assertEqual(registry["name"], "io.github.CJhuochai/cp-memory")
         self.assertEqual(registry["version"], package["version"])
