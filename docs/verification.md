@@ -9,6 +9,7 @@ python -m pip install -r requirements.txt build
 python -m unittest discover -s tests -p test_cp_memory.py
 python scripts/test-package.py
 python -X utf8 tests/personal_memory_benchmark.py
+python -X utf8 tests/recall_quality_benchmark.py
 ```
 
 On Windows, also run `powershell -ExecutionPolicy Bypass -File scripts/test-install.ps1`. On macOS/Linux, run `sh scripts/test-install.sh`. The [cross-platform workflow](../.github/workflows/cross-platform.yml) is the authoritative CI recipe.
@@ -19,9 +20,13 @@ Bytes are not model tokens. These are scripted protocol checks, **not** an indep
 
 The personal-memory benchmark uses synthetic temporary data to check restore, correction, review and governance behavior. It is not a population-level accuracy score. Client-specific UI/approval flows and real macOS/Linux Codex desktop hooks remain outside these automated claims; see [client verification boundaries](mcp-clients.md).
 
+The [round-one recall report](recall-quality.md) compares 48 hand-authored scenarios across restore text, MCP recall context and returned records. Run `python -X utf8 tests/recall_quality_benchmark.py --source-ref 5d26f98 --output before.json` to reproduce the old baseline (expected nonzero exit), then omit `--source-ref` for the current checkout. Database and auxiliary memory locations are isolated. Measurements count characters, not model tokens or end-to-end assistant behavior.
+
 ## 中文
 
-在源码目录中安装开发依赖后执行上述四条命令。Windows 另运行 `powershell -ExecutionPolicy Bypass -File scripts/test-install.ps1`；macOS/Linux 运行 `sh scripts/test-install.sh`。[跨平台工作流](../.github/workflows/cross-platform.yml) 是 CI 命令的权威来源。
+第一轮召回评估见[召回质量报告](recall-quality.md)：48 个人工重构的脱敏场景，分别检查恢复文本、MCP recall 内嵌上下文和返回记录。用 `python -X utf8 tests/recall_quality_benchmark.py --source-ref 5d26f98 --output before.json` 重现旧基线（预期非零退出），去掉 `--source-ref` 检查当前代码。数据库及辅助记忆目录均隔离；度量字符数，不声称模型 token 或端到端助手表现。
+
+在源码目录中安装开发依赖后执行上述五条命令。Windows 另运行 `powershell -ExecutionPolicy Bypass -File scripts/test-install.ps1`；macOS/Linux 运行 `sh scripts/test-install.sh`。[跨平台工作流](../.github/workflows/cross-platform.yml) 是 CI 命令的权威来源。
 
 打包冒烟构建 wheel/sdist，在全新虚拟环境中安装 wheel，初始化已安装的 stdio 服务，检查 40 个工具，并验证合成数据的写入／查询／召回／纠错／恢复。检查同一记忆在纠错前出现在恢复上下文中、标为 wrong 后不再注入。召回明确禁用辅助记忆。临时数据库不会读取或修改个人记忆。JSON 报告按紧凑 JSON 的 UTF-8 字节数测量实际工具清单，并在执行时记录成功调用。五次调用不包含 initialize 和 tools/list，也不代表完整 Agent 对话成本。
 

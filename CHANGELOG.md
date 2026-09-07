@@ -2,6 +2,13 @@
 
 ## 中文
 
+### v1.9.0 — 第一轮召回质量
+
+- 增加 48 个脱敏回归场景和可复现的旧提交对比，接入跨平台 CI。
+- 恢复与召回共享有效性、项目范围和相关性筛选；弱命中不再补入无关最近记录，未确认自动候选带审阅标记。
+- 修复 `memory_recall(allow_auxiliary=False)` 内嵌上下文仍读取辅助记忆的问题。
+- 工具参数和数据库格式不变；不迁移或清理已有记忆。范围未知时暂不恢复限定项目的记录，可在问题中明确项目名称、仓库或路径。
+
 ### v1.8.1
 
 - 将已通过公网冒烟的 `uvx cp-memory-mcp` 作为通用 MCP 推荐启动方式，并补充 Codex、Claude Code、Cursor、VS Code 和 Gemini CLI 配置。
@@ -78,6 +85,13 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.9.0 — Round-one recall quality
+
+- Add 48 sanitized regression scenarios and reproducible comparisons against committed source; include the suite in cross-platform CI.
+- Share validity, project scope and relevance selection across recall and restore. Weak queries no longer pull unrelated recent records; unconfirmed automatic candidates carry a review marker.
+- Fix nested context reading auxiliary memory despite `memory_recall(allow_auxiliary=False)`.
+- Keep tool parameters and database format unchanged, without migrating or cleaning existing data. Project-scoped records are withheld when scope is unknown; name the project, repository or path in the question.
 
 ### v1.8.1
 
