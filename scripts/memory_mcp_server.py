@@ -990,7 +990,7 @@ def memory_recall(query: str, intent: str = "", limit: int = 8, allow_auxiliary:
     rows, resolved_intent = recall_primary_records(conn, query=query, intent=resolved_intent, limit=clean_limit)
     touch_fact_ids(conn, [dict(row).get("id", "") for row in rows if dict(row).get("id", "")])
     strength = assess_recall_strength(conn, rows, intent=resolved_intent, query=query)
-    context = build_restore_context(conn, prompt=query, max_chars=1400 if clean_limit <= 10 else 2200)
+    context = build_restore_context(conn, prompt=query, max_chars=1400 if clean_limit <= 10 else 2200, allow_auxiliary=allow_auxiliary)
     governance = None
     if resolved_intent == "governance":
         governance = governance_acceptance_report(conn, limit=min(clean_limit, 5))

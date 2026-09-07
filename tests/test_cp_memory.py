@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 PLUGIN_HOME = Path(__file__).resolve().parents[1]
@@ -40,6 +41,98 @@ def load_store(temp_home):
 
 
 class CpMemoryTests(unittest.TestCase):
+    def test_scope_only_query_does_not_require_name_in_value(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        rid, _ = self.store.upsert_fact(conn, "User", "release_checks", "发布前必须运行测试。", category="belief_decision")
+        conn.execute("UPDATE memory_meta SET scope=? WHERE fact_id=?", ("project:atlas", rid))
+        self.store.upsert_personal_memory(conn, "belief_decision", "user", "personal_checks", "发布前必须审阅代码。", scope="project:atlas")
+        self.store.upsert_personal_memory(conn, "belief_decision", "user", "other_checks", "发布前必须运行测试。", scope="project:boreal")
+        self.store.upsert_personal_memory(conn, "belief_decision", "user", "document_checks", "发布前必须检查文档。", scope="workspace:C:\\Work\\Garden")
+        try:
+            for prompt in ("Atlas 的规则是什么？", "project:atlas"):
+                with self.subTest(prompt=prompt):
+                    rows, _ = self.store.recall_primary_records(conn, prompt)
+                    self.assertEqual({r["property"] for r in rows}, {"release_checks", "personal_checks"})
+            rows, _ = self.store.recall_primary_records(conn, "Atlas 海洋研究")
+            self.assertEqual(rows, [])
+            for prompt in ("C:\\Work\\Garden", "C:/Work/Garden"):
+                with self.subTest(prompt=prompt):
+                    rows, _ = self.store.recall_primary_records(conn, prompt)
+                    self.assertEqual([r["property"] for r in rows], ["document_checks"])
+        finally:
+            conn.close()
+
+    def test_broad_history_and_preference_queries_keep_category_recall(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_fact(conn, "Conversation", "recent_event", "讨论了园艺方案", category="summary")
+        self.store.upsert_personal_memory(conn, "preference", "user", "style", "用户喜欢简洁回答")
+        try:
+            for prompt, expected in (("刚刚", "recent_event"), ("昨天", "recent_event"),
+                                     ("上次聊了什么？", "recent_event"), ("What are my preferences?", "style")):
+                with self.subTest(prompt=prompt):
+                    rows, _ = self.store.recall_primary_records(conn, prompt)
+                    self.assertEqual([r["property"] for r in rows], [expected])
+        finally:
+            conn.close()
+
+    def test_recall_preserves_explicit_history_category_filter(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(conn, "episode", "user", "coffee_event", "coffee tasting yesterday")
+        self.store.upsert_personal_memory(conn, "preference", "user", "coffee_preference", "coffee without sugar")
+        rows, _ = self.store.recall_primary_records(conn, "coffee", intent="history")
+        conn.close()
+        self.assertEqual([r["property"] for r in rows], ["coffee_event"])
+
+    def test_recall_keeps_payload_only_evidence_searchable(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_fact(conn, "Evaluation", "detail", "Saved discussion", category="summary", payload="orchid watering evidence")
+        rows, _ = self.store.recall_primary_records(conn, "orchid watering")
+        conn.close()
+        self.assertEqual([r["property"] for r in rows], ["detail"])
+
+    def test_restore_scope_boundaries_and_windows_paths(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(conn, "belief_decision", "user", "garden", "garden rule", scope="workspace:C:\\Work\\Garden")
+        context = self.store.build_restore_context(conn, "C:/Work/Garden garden rule", allow_auxiliary=False)
+        other = self.store.build_restore_context(conn, "C:/Work/GardenPlus garden rule", allow_auxiliary=False)
+        conn.close()
+        self.assertIn("garden rule", context)
+        self.assertNotIn("garden rule", other)
+
+    def test_recall_auxiliary_off_applies_to_nested_context(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        conn.close()
+        sys.modules.pop("memory_mcp_server", None)
+        server = importlib.import_module("memory_mcp_server")
+        with patch.object(self.store, "search_codex_auxiliary_memory", side_effect=AssertionError("auxiliary read")):
+            result = json.loads(server.memory_recall("unknown-topic", allow_auxiliary=False))
+        self.assertEqual(result["cp_memory"]["records"], [])
+        self.assertFalse(result["used_auxiliary"])
+
+    def test_recall_relevance_precedes_confirmation_with_small_limit(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(conn, "preference", "user", "coffee", "coffee without sugar")
+        rid, _, _ = self.store.upsert_personal_memory(conn, "preference", "user", "music", "piano music")
+        self.store.correct_memory(conn, rid, "confirmed")
+        rows, _ = self.store.recall_primary_records(conn, "coffee preference", limit=1)
+        conn.close()
+        self.assertEqual([r["property"] for r in rows], ["coffee"])
+
+    def test_pending_candidate_has_machine_readable_review_state(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_personal_memory(conn, "preference", "user", "coffee", "coffee without sugar", source="stop-hook-auto-extract")
+        rows, _ = self.store.recall_primary_records(conn, "coffee")
+        conn.close()
+        self.assertEqual(rows[0].get("review_state"), "pending_review")
+
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp(prefix="cp-memory-test-")
         self.store = load_store(self.temp_dir)
@@ -1247,7 +1340,7 @@ class CpMemoryTests(unittest.TestCase):
         conn.close()
 
         self.assertIn("### Preferences", context)
-        self.assertIn("### Relationships", context)
+        self.assertNotIn("### Relationships", context)
         self.assertIn("中文说明", context)
 
     def test_restore_context_filters_wrong_and_stale_personal_memory(self):
@@ -1346,7 +1439,7 @@ class CpMemoryTests(unittest.TestCase):
 
         self.assertIn("CP Memory 发布规则", context)
         self.assertIn("用户喜欢中文结论先行", context)
-        self.assertLess(context.index("CP Memory 发布规则"), context.index("BasisProject 发布规则"))
+        self.assertNotIn("BasisProject 发布规则", context)
 
     def test_stop_hook_auto_extract_writes_project_scope(self):
         env = self.hook_env()

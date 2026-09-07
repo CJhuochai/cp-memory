@@ -1878,24 +1878,9 @@ def recall_primary_categories(intent):
 
 def recall_primary_records(conn, query="", intent="", limit=8):
     resolved_intent = infer_recall_intent(query, explicit_intent=intent)
-    categories = recall_primary_categories(resolved_intent)
     clean_limit = normalize_limit(limit, default=8, maximum=30)
-    if clean_text(query):
-        rows = search_records(conn, query, limit=clean_limit, mode="or", categories=categories)
-        if rows:
-            return rows, resolved_intent
-    if resolved_intent == "identity":
-        rows = matching_personal_memories(conn, prompt=query, limit=clean_limit)
-        if rows:
-            return rows, resolved_intent
-    if resolved_intent in {"history", "product_history"}:
-        summary_rows = recent_conversation_summaries(conn, limit=min(clean_limit, 4))
-        episode_rows = recent_personal_episodes(conn, prompt=query, limit=min(clean_limit, 3))
-        combined = list(summary_rows) + list(episode_rows)
-        if combined:
-            return combined[:clean_limit], resolved_intent
-    rows = recent_records(conn, categories=categories, limit=clean_limit) if categories else recent_records(conn, limit=clean_limit)
-    return rows, resolved_intent
+    categories = recall_primary_categories(resolved_intent)
+    return select_restore_records(conn, prompt=query, categories=categories, limit=clean_limit), resolved_intent
 
 
 def has_payload_for_fact(conn, fact_id):
@@ -2258,11 +2243,11 @@ def personal_restore_rank(row, keywords=None, active_scopes=None):
         ongoing_recent_boost = 1
     return (
         active_memory_row(row_dict),
+        scope_rank(row_dict.get("scope", ""), active_scopes=active_scopes),
+        keyword_hits,
         correction_status == "confirmed",
         auto_extract_penalty == 0,
-        scope_rank(row_dict.get("scope", ""), active_scopes=active_scopes),
         ongoing_recent_boost,
-        keyword_hits,
         int(row_dict.get("stability_score") or 50),
         int(row_dict.get("evidence_count") or 1),
         clean_text(row_dict.get("updated_at", "")),
@@ -2417,7 +2402,9 @@ def format_recall_entry(row_dict):
             tail.append(f"status={status}")
         suffix = f" | {' '.join(tail)}" if tail else ""
         return f"{row_dict.get('property', '')}: {value}{suffix}"
-    return f"{row_dict.get('property', '')}: {value}"
+    pending = row_dict.get("source") == "stop-hook-auto-extract" and row_dict.get("correction_status") != "confirmed"
+    suffix = " | review=pending_review" if pending else ""
+    return f"{row_dict.get('property', '')}: {value}{suffix}"
 
 
 def build_recall_sections(conn, rows, intent="", query="", limit_per_section=4):
@@ -2451,53 +2438,106 @@ def build_recall_sections(conn, rows, intent="", query="", limit_per_section=4):
     return rendered
 
 
-def matching_personal_memories(conn, prompt="", limit=6):
-    keywords = restore_keywords(prompt)
-    scopes = prompt_scopes(prompt)
-    rows = []
-    if keywords:
-        rows = search_records(conn, " ".join(keywords), limit=limit * 2, mode="or", categories=sorted(PERSONAL_MEMORY_CATEGORIES))
-    if not rows:
-        rows = recent_records(conn, categories=sorted(PERSONAL_MEMORY_CATEGORIES), limit=limit * 2)
-    now_text = now_local()
-    rows = [row for row in rows if restorable_memory_row(dict(row), now_text=now_text)]
-    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
-    deduped = []
-    seen = set()
-    for row in rows:
-        key = (row["entity"], row["property"])
-        if key in seen:
+def restore_scope_matches(scope, prompt):
+    parts = [part.strip().lower().replace("\\", "/").rstrip("/") for part in clean_text(scope).split(";") if part.strip()]
+    restrictions = [part for part in parts if part.startswith(("project:", "repo:", "workspace:"))]
+    if not restrictions:
+        return True
+    text = clean_text(prompt).lower().replace("\\", "/")
+    active = [part.lower().replace("\\", "/") for part in prompt_scopes(prompt)]
+    for restriction in restrictions:
+        name = restriction.split(":", 1)[1]
+        if not name:
             continue
-        seen.add(key)
-        deduped.append(row)
-        if len(deduped) >= limit:
-            break
-    return deduped
+        if restriction in active or re.search(r"(?<![a-z0-9_.-])" + re.escape(name) + r"(?![a-z0-9_.-])", text):
+            return True
+    return False
+
+
+def restore_query_terms(prompt):
+    text = clean_text(prompt).lower().replace("\\", "/")
+    text = text.replace("我们", " ").replace("说到哪了", " ")
+    # ponytail: lexical phrases only; use measured misses before adding semantic retrieval.
+    fillers = (
+        "你还记得", "你记得", "还记得", "记得", "你还", "我想把", "做成", "什么样",
+        "是什么", "有什么", "说了什么", "说过", "不能只服务", "合作情况", "沟通方式",
+        "在推进", "继续", "默认", "之前", "上次", "那次", "那回", "最近", "现在", "当前",
+        "刚刚", "昨天", "聊了",
+        "我的", "我和", "这个", "那个", "它", "什么", "是否", "吗", "呢", "你", "我", "的",
+        "是", "？", "喜欢", "偏好", "习惯", "关系", "目标", "进展", "规则", "约定", "要求",
+        "流程", "讨论", "决定",
+    )
+    for filler in fillers:
+        text = text.replace(filler, " ")
+    words = re.findall(r"[a-z0-9_./:-]+|[\u4e00-\u9fff]+", text)
+    stop = {"what", "is", "are", "my", "the", "a", "an", "of", "for", "do", "i", "you", "remember", "preference", "preferences", "please", "about"}
+    terms = [word for word in words if len(word) >= 2 and word not in stop]
+    aliases = {"时区": "timezone", "记忆系统": "memory", "个人助手": "记忆系统", "昵称": "nickname"}
+    return list(dict.fromkeys(terms + [aliases[word] for word in terms if word in aliases]))
+
+
+def select_restore_records(conn, prompt="", categories=None, limit=8):
+    terms = restore_query_terms(prompt)
+    # ponytail: bounded local candidates (200 recent + 200 search); expand only with scale evidence.
+    rows = recent_records(conn, categories=categories, limit=200)
+    if terms:
+        rows = list(search_records(conn, " ".join(terms), limit=200, categories=categories)) + list(rows)
+    candidates = {}
+    for row in rows:
+        item = dict(row)
+        if restorable_memory_row(item) and restore_scope_matches(item.get("scope", ""), prompt):
+            if item.get("source") == "stop-hook-auto-extract" and item.get("correction_status") != "confirmed":
+                item["review_state"] = "pending_review"
+            candidates[item["id"]] = item
+    broad_categories = set()
+    if not terms:
+        if not clean_text(prompt):
+            broad_categories = PERSONAL_MEMORY_CATEGORIES | {CATEGORY_DECISION, CATEGORY_SUMMARY, CATEGORY_TASK}
+        elif any(word in prompt.lower() for word in ("偏好", "喜欢", "习惯", "preference")):
+            broad_categories = {CATEGORY_PREFERENCE}
+        elif any(word in prompt for word in ("目标", "在推进", "待办")):
+            broad_categories = {CATEGORY_ONGOING, CATEGORY_TASK}
+        elif any(word in prompt for word in ("上次", "之前", "继续", "刚刚", "昨天")):
+            broad_categories = {CATEGORY_SUMMARY, CATEGORY_EPISODE, CATEGORY_TASK, CATEGORY_ONGOING}
+    ranked = []
+    payloads = {}
+    if candidates:
+        placeholders = ",".join("?" for _ in candidates)
+        payloads = dict(conn.execute(f"SELECT fact_id, content FROM memory_payloads WHERE fact_id IN ({placeholders})", list(candidates)))
+    for item in candidates.values():
+        payload = payloads.get(item["id"], "")
+        try:
+            structured = json.loads(payload)
+        except (ValueError, TypeError):
+            structured = None
+        if isinstance(structured, dict) and structured.get("memory_type") in PERSONAL_MEMORY_CATEGORIES:
+            payload = json.dumps({key: structured[key] for key in ("value", "details", "payload") if key in structured}, ensure_ascii=False)
+        text = (item["property"] + " " + item["value"] + " " + payload).lower()
+        scope_terms = set()
+        for part in item.get("scope", "").lower().replace("\\", "/").split(";"):
+            if part.startswith(("project:", "repo:", "workspace:")):
+                name = part.split(":", 1)[1]
+                scope_terms.update([part, name, *restore_query_terms(name.replace("-", " "))])
+        topical_terms = [term for term in terms if term not in scope_terms]
+        relevance = sum(len(term) for term in topical_terms if term in text)
+        if scope_terms and terms and not topical_terms:
+            relevance = 1
+        if item["entity"].lower() in terms:
+            relevance += len(item["entity"])
+        global_instruction = item.get("scope", "").lower() == "global" and item["category"] in {CATEGORY_PREFERENCE, CATEGORY_PROFILE}
+        if not relevance and item["category"] not in broad_categories and not global_instruction:
+            continue
+        ranked.append((relevance, personal_restore_rank(item, keywords=terms, active_scopes=prompt_scopes(prompt)), item["id"], item))
+    ranked.sort(key=lambda entry: entry[:3], reverse=True)
+    return [entry[3] for entry in ranked[:limit]]
+
+
+def matching_personal_memories(conn, prompt="", limit=6):
+    return select_restore_records(conn, prompt=prompt, categories=sorted(PERSONAL_MEMORY_CATEGORIES), limit=limit)
 
 
 def recent_personal_episodes(conn, prompt="", limit=3):
-    keywords = restore_keywords(prompt)
-    scopes = prompt_scopes(prompt)
-    if keywords:
-        rows = search_records(conn, " ".join(keywords), limit=limit * 3, mode="or", categories=[CATEGORY_EPISODE])
-        if not rows:
-            rows = recent_records(conn, categories=[CATEGORY_EPISODE], limit=limit * 2)
-    else:
-        rows = recent_records(conn, categories=[CATEGORY_EPISODE], limit=limit * 2)
-    now_text = now_local()
-    rows = [row for row in rows if restorable_memory_row(dict(row), now_text=now_text)]
-    rows = sorted(rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
-    deduped = []
-    seen = set()
-    for row in rows:
-        key = (row["entity"], row["property"], clean_text(row["value"]))
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped.append(row)
-        if len(deduped) >= limit:
-            break
-    return deduped
+    return select_restore_records(conn, prompt=prompt, categories=[CATEGORY_EPISODE], limit=limit)
 
 
 def active_task(conn):
@@ -2718,131 +2758,21 @@ def detect_restore_intent(prompt):
     return max(scored.items(), key=lambda item: item[1])[0]
 
 
-def build_restore_context(conn, prompt="", max_chars=3200):
+def build_restore_context(conn, prompt="", max_chars=3200, allow_auxiliary=True):
     intent = detect_restore_intent(prompt)
-    scored = classify_restore_intents(prompt)
-    keywords = restore_keywords(prompt)
-    scopes = prompt_scopes(prompt)
     lines = ["## CP Memory Context", f"Intent: {intent}"]
-    task = active_task(conn)
-    if task:
-        lines.append(f"- Active task: {task['property']}: {task['value']}")
-
-    if intent in {"startup", "history", "general"}:
-        summary_entries = []
-        summaries = recent_conversation_summaries(conn, limit=1 if intent == "startup" else 4)
-        for row in summaries:
-            payload_row = conn.execute("SELECT content FROM memory_payloads WHERE fact_id=?", (row["id"],)).fetchone()
-            teaser = payload_teaser(payload_row, 80)
-            entry = f"{row['property']}: {str(row['value'])[:220]}"
-            if teaser:
-                entry += f" | payload: {teaser}"
-            summary_entries.append(entry)
-        render_bullets(lines, "### Recent Summaries", summary_entries, min(max_chars, 1100 if intent == "startup" else max_chars))
-
-    personal_categories = [
-        CATEGORY_PROFILE,
-        CATEGORY_PREFERENCE,
-        CATEGORY_RELATIONSHIP,
-        CATEGORY_ONGOING,
-        CATEGORY_BELIEF_DECISION,
-    ]
-    layered_seed_rows = []
-    if intent in {"identity", "general", "startup", "history"} or scored.get("identity", 0) >= 3:
-        placeholders = ",".join("?" for _ in personal_categories)
-        personal_rows = conn.execute(
-            f"SELECT f.entity, f.property, f.value, f.category, f.updated_at, "
-            "COALESCE(m.stability_score, 50) AS stability_score, COALESCE(m.evidence_count, 1) AS evidence_count, "
-            "COALESCE(m.correction_status, '') AS correction_status, COALESCE(m.scope, '') AS scope, COALESCE(m.valid_until, '') AS valid_until, COALESCE(m.source, '') AS source "
-            "FROM facts f LEFT JOIN memory_meta m ON m.fact_id = f.id "
-            f"WHERE f.category IN ({placeholders}) ORDER BY f.updated_at DESC LIMIT ?",
-            [*personal_categories, 5 if intent == "startup" else 10],
-        ).fetchall()
-        matched_rows = matching_personal_memories(conn, prompt=prompt, limit=6 if intent != "startup" else 3)
-        now_text = now_local()
-        personal_rows = [row for row in personal_rows if restorable_memory_row(dict(row), now_text=now_text)]
-        personal_rows = sorted(personal_rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
-        combined_rows = []
-        seen = set()
-        for row in list(matched_rows) + list(personal_rows):
-            key = (row["entity"], row["property"])
-            if key in seen:
-                continue
-            seen.add(key)
-            combined_rows.append(row)
-            if len(combined_rows) >= (6 if intent != "startup" else 4):
-                break
-        layered_seed_rows.extend(combined_rows)
-
-    if intent in {"history", "general"} or (keywords and any(token in prompt for token in ("那次", "那回", "之前说过", "提过"))):
-        episode_rows = recent_personal_episodes(conn, prompt=prompt, limit=3)
-        render_bullets(
-            lines,
-            "### Relevant Episodes",
-            [f"{row['property']}: {str(row['value'])[:220]}" for row in episode_rows],
-            max_chars,
-        )
-
-    if intent in {"identity", "general", "startup"} or scored.get("identity", 0) >= 3:
-        identity_rows = conn.execute(
-            "SELECT f.entity, f.property, f.value, f.category, COALESCE(m.correction_status, '') AS correction_status, "
-            "COALESCE(m.stability_score, 50) AS stability_score, COALESCE(m.evidence_count, 1) AS evidence_count, "
-            "COALESCE(m.scope, '') AS scope, COALESCE(m.valid_until, '') AS valid_until, COALESCE(m.source, '') AS source, f.updated_at "
-            "FROM facts f LEFT JOIN memory_meta m ON m.fact_id = f.id WHERE f.category IN (?, ?) ORDER BY f.updated_at DESC LIMIT ?",
-            (CATEGORY_PROFILE, CATEGORY_DECISION, 6 if intent == "startup" else 12),
-        ).fetchall()
-        identity_rows = [row for row in identity_rows if restorable_memory_row(dict(row))]
-        identity_rows = sorted(identity_rows, key=lambda row: personal_restore_rank(row, keywords=keywords, active_scopes=scopes), reverse=True)
-        layered_seed_rows.extend(identity_rows)
-
-    if layered_seed_rows:
-        for section in build_recall_sections(conn, layered_seed_rows, intent=intent, query=prompt, limit_per_section=4 if intent == "startup" else 6):
-            render_bullets(
-                lines,
-                f"### {section['title']}",
-                [format_recall_entry(item) for item in section["items"]],
-                min(max_chars, 1800 if intent == "startup" else max_chars),
-            )
-
-    if intent in {"project", "general", "startup"} or scored.get("project", 0) >= 3:
-        project_rows = conn.execute(
-            "SELECT entity, property, value FROM facts WHERE entity LIKE 'BasisProject.%' OR entity LIKE 'Pattern.%' OR entity LIKE 'Bug.%' OR entity LIKE 'Env.%' ORDER BY updated_at DESC LIMIT ?",
-            (2 if intent == "startup" else 8,),
-        ).fetchall()
-        render_bullets(
-            lines,
-            "### Project Memory",
-            [f"{row['entity']} | {row['property']}: {str(row['value'])[:220]}" for row in project_rows],
-            max_chars,
-        )
-
-    if intent in {"history", "general"}:
-        noisy = conn.execute(
-            "SELECT entity, property, quality_score, noise_score FROM facts f JOIN memory_meta m ON m.fact_id = f.id WHERE m.noise_score >= 20 ORDER BY m.noise_score DESC LIMIT 3"
-        ).fetchall()
-        render_bullets(
-            lines,
-            "### Watch Items",
-            [f"{row['entity']} | {row['property']}: noise={row['noise_score']} quality={row['quality_score']}" for row in noisy],
-            max_chars,
-        )
-
-    primary_rows, recall_intent = recall_primary_records(conn, query=prompt, intent=intent, limit=4)
-    strength = assess_recall_strength(conn, primary_rows, intent=recall_intent, query=prompt)
-    if should_use_auxiliary_memory(strength, intent=recall_intent, row_count=len(primary_rows), query=prompt):
+    rows = select_restore_records(conn, prompt=prompt, limit=12)
+    for section in build_recall_sections(conn, rows, intent=intent, query=prompt, limit_per_section=4):
+        title = {"summary": "Recent Summaries", "episode": "Relevant Episodes"}.get(section["key"], section["title"])
+        render_bullets(lines, f"### {title}", [format_recall_entry(item) for item in section["items"]], max_chars)
+    strength = assess_recall_strength(conn, rows, intent=intent, query=prompt)
+    if allow_auxiliary and should_use_auxiliary_memory(strength, intent=intent, row_count=len(rows), query=prompt):
         auxiliary = search_codex_auxiliary_memory(query=prompt, limit=3)
-        render_bullets(
-            lines,
-            "### Auxiliary Snapshot",
-            [
-                f"Codex Memory | {Path(item['file']).name}:{item['line']} | {item['snippet']}"
-                for item in auxiliary
-            ],
-            max_chars,
-        )
-
-    context = "\n".join(lines)
-    return context[:max_chars]
+        render_bullets(lines, "### Auxiliary Snapshot", [
+            f"Codex Memory | {Path(item['file']).name}:{item['line']} | {item['snippet']}"
+            for item in auxiliary
+        ], max_chars)
+    return "\n".join(lines)[:max_chars]
 
 
 def explain_fact(conn, fact_id=None, entity="", prop=""):
