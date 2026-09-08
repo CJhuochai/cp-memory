@@ -91,8 +91,14 @@ class CpMemoryTests(unittest.TestCase):
         self.store.init_db(conn)
         self.store.upsert_fact(conn, "Evaluation", "detail", "Saved discussion", category="summary", payload="orchid watering evidence")
         rows, _ = self.store.recall_primary_records(conn, "orchid watering")
+        strength = self.store.assess_recall_strength(conn, rows, query="orchid watering")
         conn.close()
         self.assertEqual([r["property"] for r in rows], ["detail"])
+        self.assertNotIn("payload", rows[0])
+        self.assertGreater(strength["relevance"]["score"], 0)
+        self.assertNotEqual(strength["level"], "weak")
+        self.assertIn("orchid", strength["relevance"]["matched_terms"])
+        self.assertIn("watering", strength["relevance"]["matched_terms"])
 
     def test_restore_scope_boundaries_and_windows_paths(self):
         conn = self.store.get_db()
@@ -124,6 +130,47 @@ class CpMemoryTests(unittest.TestCase):
         rows, _ = self.store.recall_primary_records(conn, "coffee preference", limit=1)
         conn.close()
         self.assertEqual([r["property"] for r in rows], ["coffee"])
+
+    def test_recall_ignores_generic_numeric_collisions_and_keeps_identifier_precision(self):
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        self.store.upsert_fact(conn, "CP Memory", "recall_144", "CP Memory 召回质量基线 144。", category="summary")
+        self.store.upsert_fact(conn, "BasisProject", "quality_111", "BasisProject 质量问题 111。", category="summary")
+        self.store.upsert_fact(conn, "Release", "release_190", "版本 v1.9.0 已完成。", category="summary")
+        self.store.upsert_fact(conn, "Release", "release_1901", "版本 1.9.01 计划中。", category="summary")
+        rows, _ = self.store.recall_primary_records(conn, "召回质量 144 111")
+        self.assertEqual([row["property"] for row in rows], ["recall_144"])
+        strength = self.store.assess_recall_strength(conn, rows, query="召回质量 144 111")
+        self.assertEqual(strength["level"], "medium")
+        self.assertIn("relevance", strength)
+        self.assertIn("credibility", strength)
+        rows, _ = self.store.recall_primary_records(conn, "质量 144 111")
+        self.assertEqual(rows, [])
+        self.store.upsert_fact(conn, "CP Memory", "cp_issue_23", "CP Memory 召回问题 ticket 23。", category="summary")
+        self.store.upsert_fact(conn, "CP Memory", "cp_issue_24", "CP Memory 召回问题 ticket 24。", category="summary")
+        self.store.upsert_fact(conn, "Release", "issue_7", "修复工单 #7。", category="summary")
+        self.store.upsert_fact(conn, "Release", "issue_17", "修复工单 #17。", category="summary")
+        self.store.upsert_fact(conn, "Release", "ticket_abc7", "修复工单 ABC-7。", category="summary")
+        self.store.upsert_fact(conn, "Release", "ticket_abc70", "修复工单 ABC-70。", category="summary")
+        rows, _ = self.store.recall_primary_records(conn, "版本 1.9.0")
+        rows_with_v, _ = self.store.recall_primary_records(conn, "v1.9.0")
+        rows_with_topic_and_id, _ = self.store.recall_primary_records(conn, "CP Memory ticket 23")
+        rows_with_issue_7, _ = self.store.recall_primary_records(conn, "issue 7")
+        rows_with_hash_7, _ = self.store.recall_primary_records(conn, "#7")
+        rows_with_alpha_id, _ = self.store.recall_primary_records(conn, "issue ABC-7")
+        self.store.upsert_fact(conn, "Release", "issue_23", "修复 PR #23。", category="summary")
+        self.store.upsert_fact(conn, "Release", "issue_123", "修复 PR #123。", category="summary")
+        rows_with_hash, _ = self.store.recall_primary_records(conn, "#23")
+        conn.close()
+        self.assertEqual([row["property"] for row in rows], ["release_190"])
+        self.assertEqual([row["property"] for row in rows_with_v], ["release_190"])
+        self.assertEqual(self.store.restore_term_groups("issue 7")["identifiers"], ["7"])
+        self.assertEqual(self.store.restore_term_groups("#7")["identifiers"], ["#7"])
+        self.assertEqual([row["property"] for row in rows_with_issue_7], ["issue_7"])
+        self.assertEqual([row["property"] for row in rows_with_hash_7], ["issue_7"])
+        self.assertEqual([row["property"] for row in rows_with_alpha_id], ["ticket_abc7"])
+        self.assertEqual([row["property"] for row in rows_with_hash], ["issue_23"])
+        self.assertEqual([row["property"] for row in rows_with_topic_and_id], ["cp_issue_23"])
 
     def test_pending_candidate_has_machine_readable_review_state(self):
         conn = self.store.get_db()
@@ -1468,6 +1515,91 @@ class CpMemoryTests(unittest.TestCase):
         conn.close()
 
         self.assertEqual(scope, "project:cp-memory")
+
+    def test_hook_scope_context_flows_from_stop_to_startup_and_prompt_restore(self):
+        env = self.hook_env()
+
+        def invoke(name, data):
+            return subprocess.run(
+                [sys.executable, str(HOOKS_DIR / name)],
+                input=json.dumps(data, ensure_ascii=False),
+                text=True,
+                encoding="utf-8",
+                env=env,
+                check=True,
+                capture_output=True,
+            )
+
+        invoke("stop.py", {
+            "cwd": r"C:\\Users\\24520\\plugins\\cp-memory",
+            "prompt": "请总结本轮发布检查的结论和下一步。",
+            "assistant_message": "CP_SCOPE_MARKER：本轮 CP Memory 发布检查已完成，下一步是提交并创建 PR；已核对召回基准、单元测试和安装验证，暂未发布。",
+        })
+        invoke("stop.py", {
+            "cwd": r"E:\\BasisProject",
+            "prompt": "请总结本轮编译检查的结论和下一步。",
+            "assistant_message": "BASIS_SCOPE_MARKER：本轮 BasisProject 编译检查已完成，下一步是修复接口；已定位受影响模块并保留现有数据与对外契约。",
+        })
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        scopes = {
+            marker: conn.execute(
+                "SELECT m.scope FROM facts f JOIN memory_meta m ON m.fact_id=f.id "
+                "WHERE f.entity='CP Memory.CurrentConversation' AND f.category='summary' AND f.value LIKE ?",
+                (f"%{marker}%",),
+            ).fetchone()["scope"]
+            for marker in ("CP_SCOPE_MARKER", "BASIS_SCOPE_MARKER")
+        }
+        conn.close()
+        self.assertEqual(scopes["CP_SCOPE_MARKER"], "project:cp-memory")
+        self.assertEqual(scopes["BASIS_SCOPE_MARKER"], r"workspace:E:\BasisProject")
+
+        startup = json.loads(invoke("session_start.py", {"cwd": r"C:\\Users\\24520\\plugins\\cp-memory"}).stdout)
+        prompt_restore = json.loads(invoke("user_prompt_submit.py", {
+            "cwd": r"C:\\Users\\24520\\plugins\\cp-memory",
+            "prompt": "上次完成了什么？",
+        }).stdout)
+        startup_context = startup["hookSpecificOutput"]["additionalContext"]
+        prompt_context = prompt_restore["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("CP_SCOPE_MARKER", startup_context)
+        self.assertIn("CP_SCOPE_MARKER", prompt_context)
+        self.assertNotIn("BASIS_SCOPE_MARKER", startup_context)
+        self.assertNotIn("BASIS_SCOPE_MARKER", prompt_context)
+
+    def test_stop_summary_scope_prefers_explicit_prompt_and_clears_old_scope(self):
+        env = self.hook_env()
+
+        def invoke(data):
+            subprocess.run(
+                [sys.executable, str(HOOKS_DIR / "stop.py")],
+                input=json.dumps(data, ensure_ascii=False),
+                text=True,
+                encoding="utf-8",
+                env=env,
+                check=True,
+                capture_output=True,
+            )
+
+        invoke({
+            "cwd": r"E:\\BasisProject",
+            "prompt": "CP Memory 的发布检查请总结一下。",
+            "assistant_message": "本轮已完成发布检查、单元测试和安装验证，下一步是创建 PR 并等待审查结果；版本、文档和变更范围也已完成初步核对，发布说明仍需由维护者最后确认。",
+        })
+        invoke({
+            "prompt": "请总结今天的阅读记录。",
+            "assistant_message": "今天完成了两篇技术文章的阅读，并记录了后续需要继续核对的三个问题和资料来源；明天会根据这些材料整理可执行的学习笔记和待办，同时补充每项结论对应的原始出处。",
+        })
+
+        conn = self.store.get_db()
+        self.store.init_db(conn)
+        latest_scope = conn.execute(
+            "SELECT m.scope FROM facts f JOIN memory_meta m ON m.fact_id=f.id "
+            "WHERE f.entity='CP Memory.CurrentConversation' AND f.property='latest-turn-summary'"
+        ).fetchone()["scope"]
+        conn.close()
+        self.assertEqual(self.store.resolve_memory_scope("CP Memory", {"cwd": r"E:\\BasisProject"}), "project:cp-memory")
+        self.assertEqual(latest_scope, "")
 
     def test_auto_extract_review_candidates_and_confirmed_priority(self):
         conn = self.store.get_db()

@@ -11,7 +11,7 @@ from cp_memory_common import (
 def main():
     data = read_stdin_json()
     prompt = extract_prompt(data)
-    context, _ = build_prompt_context(prompt)
+    context, _ = build_prompt_context(prompt, event_data=data)
     if context:
         emit_hook_context("UserPromptSubmit", context)
     else:
