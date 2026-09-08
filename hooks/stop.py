@@ -21,7 +21,7 @@ def main():
 
     conn = connect()
     try:
-        summary_id, _ = persist_turn_summary(conn, prompt, assistant)
+        summary_id, _ = persist_turn_summary(conn, prompt, assistant, event_data=data)
         persist_personal_signals(conn, prompt, assistant, summary_id=summary_id)
         conn.commit()
     finally:

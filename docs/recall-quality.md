@@ -34,7 +34,7 @@ Limits: scope comes from names, repo/project/workspace markers or paths in the q
 
 ## Results / 结果
 
-本地验证通过：61 项 unittest、20/20 个人记忆基准、144/144 召回检查、wheel/sdist 打包与 40 个 MCP 工具/5 次调用冒烟、Windows 隔离安装、git diff --check。 / Local checks passed: 61 unit tests, 20/20 personal benchmark, 144/144 recall checks, wheel/sdist smoke with 40 MCP tools and 5 calls, Windows isolated installation, and git diff --check.
+本地验证通过：62 项 unittest、20/20 个人记忆基准、144/144 第一轮召回检查、wheel/sdist 打包与 40 个 MCP 工具/5 次调用冒烟、Windows 隔离安装、git diff --check。 / Local checks passed: 62 unit tests, 20/20 personal benchmark, 144/144 round-one recall checks, wheel/sdist smoke with 40 MCP tools and 5 calls, Windows isolated installation, and git diff --check.
 
 | Metric / 指标 | Before / 改前 | After / 改后 |
 | --- | ---: | ---: |
@@ -111,4 +111,52 @@ python -X utf8 tests/recall_quality_benchmark.py --output after.json
 | empty_1 | 3/3 | 3/3 | - |
 | empty_2 | 3/3 | 3/3 | - |
 
-发布前独立审查另补回归：泛历史/英文偏好、正文不重复项目名的范围查询、原生 Windows 路径。对应失败已复现并修复，61 项测试通过。 / Independent pre-release review added broad history/English preference, scope-only queries without project names in values, and native Windows path regressions. Failures were reproduced and fixed; 61 tests pass.
+发布前独立审查另补回归：泛历史/英文偏好、正文不重复项目名的范围查询、原生 Windows 路径。对应失败已复现并修复，62 项测试通过。 / Independent pre-release review added broad history/English preference, scope-only queries without project names in values, and native Windows path regressions. Failures were reproduced and fixed; 62 tests pass.
+
+## Follow-up recall improvement proposal / 后续召回质量提升建议
+
+### 中文建议
+
+本轮目标是降低“数字或通用词碰巧命中”造成的无关注入，同时保留明确编号查询，并让相关性与记忆可信度各自承担清晰职责。
+
+现状证据：恢复选择器会把查询拆成词，在事实、属性和正文中做任一词子串匹配；数字、常见业务词和项目词没有分层。无范围记录默认放行；强度评估又把记录数量、分类、payload、来源和证据数累加，因此多条弱相关记录可能被标成 `strong`。这正好解释了包含“召回质量 144 111”的查询为什么可能带入其他项目摘要。
+
+实施方案：
+
+1. 将查询词分成主题词、通用词和数字/编号词。通用词（例如“质量”“问题”“规则”“偏好”等）单独命中不产生相关性；带有明确主题的复合词保留其主题片段，避免粗暴全部 AND。数字默认只在已有主题命中时辅助排序；`#23`、`issue 23`、`v1.9.0`、`版本 1.9.0` 等明确编号查询使用边界匹配作为编号证据，避免 `23` 命中 `123`。
+2. 先做有效期、纠正状态和范围筛选，再要求至少一个主题词或明确编号命中。项目/仓库/工作区范围只从用户问题中的显式名称、路径或仓库标识解析；没有可靠范围的历史记录保持无范围状态，不推测归属。已标记范围的记录继续严格隔离；全局画像和偏好仍按既有规则保留。
+3. 第二阶段将范围上下文贯通到 Stop、SessionStart、UserPromptSubmit 与恢复入口。Stop 只为会话摘要写入由显式 prompt 或事件 `cwd` 等明确项目字段解析出的范围；个人信号仍只从对话文本判断范围，避免把目录中的个人话题误归到项目。SessionStart 与 UserPromptSubmit 使用同一解析器恢复对应范围；无上下文的历史查询保持现有无范围语义。范围不是访问控制。
+4. 召回强度同时返回“相关性”和“可信度”两个独立维度。相关性只由主题/编号命中和范围匹配决定；可信度只描述确认状态、证据数、稳定度及来源等治理信号。`strong` 不再由返回条数、payload 存在与否或来源数量堆出来；无主题命中时不因记录很多而升级。
+5. 增加脱敏回归：数字碰撞、通用词碰撞、跨项目、无 scope 历史记录、同义/中英文表达、明确编号、无结果，以及相关记录排在大量噪声后的防漏召回。验收同时检查召回率、无关注入率、编号精确性和强度维度的解释是否一致。
+
+权衡与边界：这是轻量词法门槛，不引入向量数据库或新依赖；同义词先覆盖现有中英文和项目别名，未覆盖的自然语言改写仍可能漏召回。范围识别不是安全隔离，真正的权限控制仍需在外部边界实现。大库性能继续受限于最近 200 条加搜索 200 条候选，若基准显示漏召回或延迟，再升级索引和候选策略。
+
+验收标准：固定脱敏场景全部通过；数字/通用词单独命中不产生无关记录；明确编号可精确命中；已明确标记的项目范围不会串库；无 scope 历史记录不被猜测归属，但不承诺对无 scope 数据提供绝对项目隔离；至少一个主题词的相关记录在噪声存在时仍能召回；返回结果能分别说明相关性与可信度。验证使用默认 unittest、个人记忆基准、召回质量基准、打包冒烟和 Windows 隔离安装（若 hooks/MCP 代码变更）。
+
+### English proposal
+
+This round aims to reduce unrelated injection caused by accidental numeric or generic-word matches while preserving explicit identifier searches and separating topical relevance from memory credibility.
+
+Evidence: the restore selector tokenizes a query and accepts substring matches across facts, properties, and payloads. Numeric terms, generic business words, and project terms are not separated. Unscoped rows are allowed by default, while the strength assessor adds row count, category, payload, source, and evidence signals. Several weakly related rows can therefore become `strong`, which explains why a query containing “recall quality 144 111” may pull a summary from another project.
+
+Plan: classify query terms as topical, generic, or numeric/identifier terms; ignore generic-only matches; require a topical or explicit identifier match after validity, correction, and scope filters; preserve explicit project/repository/workspace scope without guessing missing historical scope; propagate reliable scope context through Stop, SessionStart, UserPromptSubmit, and restore while leaving personal-memory scope text-derived; and return independent relevance and credibility dimensions. Relevance comes from topic/identifier and scope matches. Credibility reports confirmation, evidence, stability, and source signals. Row count, payload presence, and source diversity must not manufacture `strong`. Explicit scope markers are isolated; unscoped historical data has no absolute project isolation guarantee.
+
+Regression coverage will include numeric collisions, generic-word collisions, cross-project leakage, unscoped history, Chinese/English and synonym phrasing, exact identifiers, no-result queries, and recall protection when noise ranks ahead of the target. Acceptance checks recall, unrelated injection, identifier precision, and explainable strength dimensions. This remains a small lexical gate with no new dependency; semantic paraphrase coverage and large-scale latency remain follow-up work if measured failures justify them.
+
+### Follow-up validation / 后续验证
+
+本分支新增 5 组脱敏场景，共 58 个场景、174 个入口检查：`174/174` 通过，必须项召回率 `100%`，禁止项注入 `0`，无关注入率 `0%`。默认 CP Memory 单元测试与个人记忆基准会在每次阶段完成后重跑；未执行发布、push、真实主库写入或已安装缓存更新。 / This branch adds five sanitized scenario groups for 58 scenarios and 174 surface checks: `174/174` passed, required recall `100%`, forbidden appearances `0`, and unrelated injection `0%`. The default CP Memory unit suite and personal-memory benchmark are rerun after each stage. No release, push, live-database write, or installed-cache update was performed.
+
+## Next stages / 后续阶段
+
+### 第二阶段：范围上下文贯通 / Stage 2: propagate scope context
+
+中文：已实现并验证 `cwd`、`working_directory`、`workspace`、`workspace_path`、`project_root` 的受限解析：只有能识别为项目、仓库或工作区的值才产生范围。Stop 用该范围标记会话摘要；SessionStart、UserPromptSubmit 和恢复入口使用同一解析器。显式 prompt 优先于事件目录，个人信号不使用目录自动标记；无事件上下文时维持原有无范围查询语义。临时库的三段链路 Stop 写入 → SessionStart 泛历史恢复 → UserPromptSubmit 恢复均已验证，同时覆盖 CP Memory 与 BasisProject 串入隔离、旧 latest summary 范围清理和 Windows 路径。范围不是权限或数据隔离机制。
+
+English: Implemented and verified restricted parsing for `cwd`, `working_directory`, `workspace`, `workspace_path`, and `project_root`: only values recognized as a project, repository, or workspace produce a scope. Stop marks conversation summaries with that scope; SessionStart, UserPromptSubmit, and restore use the same parser. An explicit prompt takes precedence over the event directory, personal signals are never scoped from the directory alone, and no-event queries retain the existing unscoped behavior. A temporary-database chain—Stop write, SessionStart broad-history restore, and UserPromptSubmit restore—covers CP Memory/BasisProject isolation, clearing an old latest-summary scope, and Windows paths. Scope is not authorization or data isolation.
+
+### 第三阶段：匿名留出集与升级触发 / Stage 3: anonymous holdout and upgrade triggers
+
+中文：从固定回归集之外建立不含私人文本的匿名留出集，按主题命中、明确编号、通用词/数字碰撞、跨项目、同义改写、无结果和噪声排序分别统计 Recall、Precision、MRR、无关注入率、编号精确率、scope 串入率和 p95 延迟。每次规则或版本变更同时跑固定集与留出集，记录场景脚本和源码哈希。只有当留出集出现稳定漏召回、编号精确率下降、已标记 scope 串入，或候选规模导致 p95 延迟超出项目可接受阈值时，才考虑同义词扩充、字段级索引或语义检索；在此之前不引入向量库或复杂重排。
+
+English: Build an anonymous holdout set outside the fixed regression suite, with no private text. Report Recall, Precision, MRR, unrelated-injection rate, identifier precision, scoped leakage, and p95 latency separately for topical matches, explicit identifiers, generic/numeric collisions, cross-project cases, paraphrases, no-result queries, and noisy rankings. Run both suites for every rule or version change and record the scenario and source hashes. Consider synonym expansion, field-level indexing, or semantic retrieval only after the holdout shows persistent misses, reduced identifier precision, leakage from an explicit scope, or p95 latency beyond the project threshold. Until then, do not add a vector database or complex reranker.

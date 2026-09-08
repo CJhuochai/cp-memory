@@ -37,6 +37,8 @@ from cp_memory_store import (  # noqa: E402
     link_records,
     now_local,
     recent_conversation_summaries,
+    resolve_memory_scope,
+    restore_prompt_with_scope,
     search_records,
     slugify_key,
     should_inject_restore_context,
@@ -573,8 +575,9 @@ def search_facts(conn, terms, limit=8, categories=None):
     return search_records(conn, query, limit=limit, mode="or", categories=categories)
 
 
-def persist_turn_summary(conn, prompt, assistant):
+def persist_turn_summary(conn, prompt, assistant, event_data=None):
     value, importance, topics = make_turn_summary(prompt, assistant)
+    scope = resolve_memory_scope(prompt, event_data)
     tags = ["cp-memory", "auto-summary", "stop-hook", f"importance:{importance}"]
     tags.extend(f"topic:{topic}" for topic in topics)
     task = active_task(conn)
@@ -599,6 +602,7 @@ def persist_turn_summary(conn, prompt, assistant):
         },
         content_type="application/json",
     )
+    conn.execute("UPDATE memory_meta SET scope=? WHERE fact_id=?", (scope, rid))
     history = conn.execute(
         "SELECT id FROM facts WHERE entity=? AND category=? AND property LIKE ? AND value=? ORDER BY updated_at DESC LIMIT 1",
         ("CP Memory.CurrentConversation", CATEGORY_SUMMARY, f"{SUMMARY_HISTORY_PREFIX}%", value),
@@ -627,6 +631,7 @@ def persist_turn_summary(conn, prompt, assistant):
             },
             content_type="application/json",
         )
+    conn.execute("UPDATE memory_meta SET scope=? WHERE fact_id=?", (scope, history_id))
     if task:
         link_records(conn, "fact", rid, "about_task", "fact", task["id"])
         link_records(conn, "fact", history_id, "about_task", "fact", task["id"])
@@ -757,20 +762,22 @@ def persist_checkpoint(conn, trigger, turn_id, raw_data):
     return rid, action
 
 
-def build_startup_context(prompt=""):
+def build_startup_context(prompt="", event_data=None):
+    scoped_prompt = restore_prompt_with_scope(prompt, event_data)
     conn = connect()
     try:
-        context = build_restore_context(conn, prompt=prompt, max_chars=3200)
-        return context + build_review_reminder(conn, subject="user", limit=10), detect_restore_intent(prompt)
+        context = build_restore_context(conn, prompt=scoped_prompt, max_chars=3200)
+        return context + build_review_reminder(conn, subject="user", limit=10), detect_restore_intent(scoped_prompt)
     finally:
         conn.close()
 
 
-def build_prompt_context(prompt=""):
+def build_prompt_context(prompt="", event_data=None):
     if not should_inject_restore_context(prompt):
         return "", detect_restore_intent(prompt)
+    scoped_prompt = restore_prompt_with_scope(prompt, event_data)
     conn = connect()
     try:
-        return build_restore_context(conn, prompt=prompt, max_chars=2200), detect_restore_intent(prompt)
+        return build_restore_context(conn, prompt=scoped_prompt, max_chars=2200), detect_restore_intent(scoped_prompt)
     finally:
         conn.close()

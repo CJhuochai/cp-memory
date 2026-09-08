@@ -1062,18 +1062,42 @@ def active_memory_row(row, now_text=""):
 def detect_memory_scope(text):
     cleaned = clean_text(text)
     lowered = cleaned.lower()
+    normalized_path = lowered.replace("\\", "/")
     if not cleaned:
         return ""
     if "cjhuochai/cp-memory" in lowered:
         return "repo:CJhuochai/cp-memory"
+    if re.search(r"(?:^|/)plugins/cp-memory(?:/|$)", normalized_path):
+        return "project:cp-memory"
     if "cp memory" in lowered or "cp-memory" in lowered:
         return "project:cp-memory"
-    if "basisproject" in lowered or "e:\\basisproject" in lowered:
+    if "basisproject" in lowered or "e:/basisproject" in normalized_path:
         return "workspace:E:\\BasisProject"
     repo_match = re.search(r"\b([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)\b", cleaned)
     if repo_match:
         return f"repo:{repo_match.group(1)}"
     return ""
+
+
+def resolve_memory_scope(prompt="", event_data=None):
+    scope = detect_memory_scope(prompt)
+    if scope or not isinstance(event_data, dict):
+        return scope
+    for key in ("project_root", "workspace", "workspace_path", "working_directory", "cwd"):
+        value = event_data.get(key)
+        if isinstance(value, str):
+            scope = detect_memory_scope(value)
+            if scope:
+                return scope
+    return ""
+
+
+def restore_prompt_with_scope(prompt="", event_data=None):
+    clean_prompt = clean_text(prompt)
+    scope = resolve_memory_scope(clean_prompt, event_data)
+    if not scope or scope in prompt_scopes(clean_prompt):
+        return clean_prompt
+    return f"{clean_prompt}\n{scope}".strip()
 
 
 def prompt_scopes(prompt):
@@ -1877,6 +1901,7 @@ def recall_primary_categories(intent):
 
 
 def recall_primary_records(conn, query="", intent="", limit=8):
+    query = restore_prompt_with_scope(query)
     resolved_intent = infer_recall_intent(query, explicit_intent=intent)
     clean_limit = normalize_limit(limit, default=8, maximum=30)
     categories = recall_primary_categories(resolved_intent)
@@ -1894,51 +1919,78 @@ def assess_recall_strength(conn, rows, intent="", query=""):
             "level": "none",
             "score": 0,
             "reason": "no_cp_memory_hits",
+            "relevance": {"level": "none", "score": 0, "matched_terms": []},
+            "credibility": {"level": "none", "score": 0},
         }
-    keywords = [item.lower() for item in parse_keywords(query)]
-    relevance_hits = 0
-    score = 0
+    term_groups = restore_term_groups(query)
+    relevance_scores = []
+    credibility_scores = []
+    matched_terms = set()
     reasons = []
+    payloads = {}
+    payload_ids = [dict(row).get("id") for row in rows[:5] if not dict(row).get("payload") and dict(row).get("id")]
+    if payload_ids:
+        placeholders = ",".join("?" for _ in payload_ids)
+        payloads = dict(conn.execute(
+            f"SELECT fact_id, content FROM memory_payloads WHERE fact_id IN ({placeholders})",
+            payload_ids,
+        ).fetchall())
     for row in rows[:5]:
         row_dict = dict(row)
         category = clean_text(row_dict.get("category", ""))
         source = clean_text(row_dict.get("source", ""))
         correction = clean_text(row_dict.get("correction_status", "")).lower()
-        text = fact_search_text(row_dict)
-        if keywords:
-            relevance_hits += sum(1 for keyword in keywords if keyword and keyword in text)
-        if category in {CATEGORY_PROFILE, CATEGORY_PREFERENCE, CATEGORY_RELATIONSHIP, CATEGORY_ONGOING, CATEGORY_BELIEF_DECISION, CATEGORY_SUMMARY, CATEGORY_EPISODE}:
-            score += 2
+        text = restore_row_search_text(row_dict, row_dict.get("payload", "") or payloads.get(row_dict.get("id"), ""))
+        relevance, matched_topical, matched_identifiers, _ = restore_row_relevance(row_dict, text, term_groups)
+        row_terms = matched_topical + matched_identifiers
+        matched_terms.update(row_terms)
+        if not term_groups["terms"] and category in {CATEGORY_PROFILE, CATEGORY_PREFERENCE}:
+            relevance = 1
+        relevance_scores.append(relevance)
+
+        # Credibility is governance metadata; it cannot upgrade an irrelevant hit.
+        credibility = 0
         if correction in {"confirmed", ""}:
-            score += 1
-        if int(row_dict.get("stability_score") or 50) >= 70:
-            score += 1
-        if int(row_dict.get("evidence_count") or 1) > 1:
-            score += 1
-        if has_payload_for_fact(conn, row_dict.get("id", "")):
-            score += 1
+            credibility += 1
+        try:
+            if int(row_dict.get("stability_score") or 50) >= 70:
+                credibility += 1
+            if int(row_dict.get("evidence_count") or 1) > 1:
+                credibility += 1
+        except (TypeError, ValueError):
+            pass
         if source and source != "stop-hook-auto-extract":
-            score += 1
-        if source == "stop-hook-auto-extract" and correction not in {"confirmed"}:
-            score -= 1
-    if keywords and relevance_hits == 0:
-        score = min(score, 2)
-        reasons.append("query_relevance=none")
-    elif keywords and relevance_hits > 0:
-        score += min(4, relevance_hits)
-        reasons.append(f"query_relevance={relevance_hits}")
-    if score >= 12:
+            credibility += 1
+        credibility_scores.append(min(4, credibility))
+
+    relevance_score = max(relevance_scores, default=0)
+    if relevance_score >= 3:
         level = "strong"
-    elif score >= 6:
+    elif relevance_score > 0:
         level = "medium"
     else:
         level = "weak"
+    credibility_score = max(credibility_scores, default=0)
+    credibility_level = "strong" if credibility_score >= 3 else "medium" if credibility_score else "weak"
+    if term_groups["terms"]:
+        reasons.append(f"query_relevance={relevance_score}")
+    else:
+        reasons.append("query_relevance=broad")
     reasons.append(f"intent={intent or 'general_memory'}")
     reasons.append(f"rows={len(rows)}")
     return {
         "level": level,
-        "score": score,
+        "score": relevance_score,
         "reason": ",".join(reasons),
+        "relevance": {
+            "level": level,
+            "score": relevance_score,
+            "matched_terms": sorted(matched_terms),
+        },
+        "credibility": {
+            "level": credibility_level,
+            "score": credibility_score,
+        },
     }
 
 
@@ -2461,7 +2513,7 @@ def restore_query_terms(prompt):
     fillers = (
         "你还记得", "你记得", "还记得", "记得", "你还", "我想把", "做成", "什么样",
         "是什么", "有什么", "说了什么", "说过", "不能只服务", "合作情况", "沟通方式",
-        "在推进", "继续", "默认", "之前", "上次", "那次", "那回", "最近", "现在", "当前",
+        "在推进", "完成", "完成了", "继续", "默认", "之前", "上次", "那次", "那回", "最近", "现在", "当前",
         "刚刚", "昨天", "聊了",
         "我的", "我和", "这个", "那个", "它", "什么", "是否", "吗", "呢", "你", "我", "的",
         "是", "？", "喜欢", "偏好", "习惯", "关系", "目标", "进展", "规则", "约定", "要求",
@@ -2469,15 +2521,122 @@ def restore_query_terms(prompt):
     )
     for filler in fillers:
         text = text.replace(filler, " ")
-    words = re.findall(r"[a-z0-9_./:-]+|[\u4e00-\u9fff]+", text)
+    words = re.findall(r"#[a-z0-9_./:-]+|[a-z0-9_./:-]+|[\u4e00-\u9fff]+", text)
     stop = {"what", "is", "are", "my", "the", "a", "an", "of", "for", "do", "i", "you", "remember", "preference", "preferences", "please", "about"}
     terms = [word for word in words if len(word) >= 2 and word not in stop]
     aliases = {"时区": "timezone", "记忆系统": "memory", "个人助手": "记忆系统", "昵称": "nickname"}
     return list(dict.fromkeys(terms + [aliases[word] for word in terms if word in aliases]))
 
 
-def select_restore_records(conn, prompt="", categories=None, limit=8):
+GENERIC_RECALL_TERMS = {
+    "质量", "问题", "方案", "规则", "流程", "内容", "结果", "信息", "记录", "主题", "偏好", "习惯",
+    "目标", "进展", "历史", "讨论", "决定", "要求", "约定", "情况", "版本", "验证", "测试",
+    "代码", "实现", "修复", "发布", "quality", "issue", "plan", "rule", "process", "content",
+    "result", "history", "decision", "requirement", "release",
+}
+
+
+def restore_term_groups(prompt):
     terms = restore_query_terms(prompt)
+    explicit_identifiers = {
+        match.group(1).lower()
+        for match in re.finditer(
+            r"(?i)(?:#|\b(?:id|issue|ticket|version|v)\b|编号|版本)\s*[:#-]?\s*([a-z0-9]+(?:[._-][a-z0-9]+)*)",
+            clean_text(prompt),
+        )
+    }
+    explicit_identifiers.update(match.group(1).lower() for match in re.finditer(r"#([a-z0-9]+(?:[._-][a-z0-9]+)*)", clean_text(prompt), re.I))
+    topical = []
+    generic = []
+    identifiers = []
+    for term in terms:
+        if term in explicit_identifiers and not term.startswith("#"):
+            identifiers.append(term)
+            continue
+        if term.startswith("#") or re.fullmatch(r"\d+(?:\.\d+)*", term):
+            if term.lstrip("#") in explicit_identifiers or "." in term:
+                identifiers.append(term)
+            else:
+                generic.append(term)
+            continue
+        if re.fullmatch(r"v\d+(?:\.\d+)*", term):
+            identifiers.append(term)
+            continue
+        if term in GENERIC_RECALL_TERMS:
+            generic.append(term)
+        elif re.search(r"[\u4e00-\u9fff]", term):
+            remainder = term
+            matched_generic = []
+            for generic_term in sorted(GENERIC_RECALL_TERMS, key=len, reverse=True):
+                if re.fullmatch(r"[\u4e00-\u9fff]+", generic_term) and generic_term in remainder:
+                    remainder = remainder.replace(generic_term, " ")
+                    matched_generic.append(generic_term)
+            generic.extend(matched_generic)
+            topical.extend(part for part in remainder.split() if part)
+        else:
+            topical.append(term)
+    for explicit_identifier in explicit_identifiers:
+        if not any(
+            identifier == explicit_identifier
+            or identifier.lstrip("#") == explicit_identifier
+            or identifier.removeprefix("v") == explicit_identifier
+            for identifier in identifiers
+        ):
+            identifiers.append(explicit_identifier)
+    return {
+        "terms": terms,
+        "topical": list(dict.fromkeys(topical)),
+        "generic": list(dict.fromkeys(generic)),
+        "identifiers": list(dict.fromkeys(identifiers)),
+    }
+
+
+def restore_term_matches(term, text, exact=False):
+    if term.startswith("#"):
+        return re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", text) is not None
+    if re.fullmatch(r"v\d+(?:\.\d+)*", term):
+        return re.search(r"(?<![a-z0-9.])" + re.escape(term) + r"(?![a-z0-9.])", text) is not None
+    if re.fullmatch(r"\d+(?:\.\d+)*", term):
+        version = re.escape(term)
+        return re.search(r"(?<![a-z0-9_.-])v?" + version + r"(?![a-z0-9_.-])", text) is not None
+    if exact:
+        return re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", text) is not None
+    return term in text
+
+
+def restore_row_search_text(item, payload=""):
+    try:
+        structured = json.loads(payload)
+    except (ValueError, TypeError):
+        structured = None
+    if isinstance(structured, dict) and structured.get("memory_type") in PERSONAL_MEMORY_CATEGORIES:
+        payload = json.dumps({key: structured[key] for key in ("value", "details", "payload") if key in structured}, ensure_ascii=False)
+    return (item.get("property", "") + " " + item.get("value", "") + " " + payload).lower()
+
+
+def restore_row_relevance(item, text, term_groups):
+    scope_terms = set()
+    for part in item.get("scope", "").lower().replace("\\", "/").split(";"):
+        if part.startswith(("project:", "repo:", "workspace:")):
+            name = part.split(":", 1)[1]
+            scope_terms.update([part, name, *restore_query_terms(name.replace("-", " "))])
+    topical_terms = [term for term in term_groups["topical"] if term not in scope_terms]
+    identifier_terms = [term for term in term_groups["identifiers"] if term not in scope_terms]
+    scope_term_match = any(term in scope_terms for term in term_groups["terms"])
+    matched_topical = [term for term in topical_terms if restore_term_matches(term, text)]
+    matched_identifiers = [term for term in identifier_terms if restore_term_matches(term, text, exact=True)]
+    entity_term = item.get("entity", "").lower()
+    if entity_term in term_groups["topical"] and entity_term not in matched_topical:
+        matched_topical.append(entity_term)
+    relevance = len(matched_topical) + (len(matched_identifiers) * 3)
+    if scope_terms and term_groups["terms"] and not topical_terms and not identifier_terms:
+        relevance = 1
+    return relevance, matched_topical, matched_identifiers, scope_term_match
+
+
+def select_restore_records(conn, prompt="", categories=None, limit=8):
+    term_groups = restore_term_groups(prompt)
+    terms = term_groups["terms"]
     # ponytail: bounded local candidates (200 recent + 200 search); expand only with scale evidence.
     rows = recent_records(conn, categories=categories, limit=200)
     if terms:
@@ -2506,25 +2665,14 @@ def select_restore_records(conn, prompt="", categories=None, limit=8):
         payloads = dict(conn.execute(f"SELECT fact_id, content FROM memory_payloads WHERE fact_id IN ({placeholders})", list(candidates)))
     for item in candidates.values():
         payload = payloads.get(item["id"], "")
-        try:
-            structured = json.loads(payload)
-        except (ValueError, TypeError):
-            structured = None
-        if isinstance(structured, dict) and structured.get("memory_type") in PERSONAL_MEMORY_CATEGORIES:
-            payload = json.dumps({key: structured[key] for key in ("value", "details", "payload") if key in structured}, ensure_ascii=False)
-        text = (item["property"] + " " + item["value"] + " " + payload).lower()
-        scope_terms = set()
-        for part in item.get("scope", "").lower().replace("\\", "/").split(";"):
-            if part.startswith(("project:", "repo:", "workspace:")):
-                name = part.split(":", 1)[1]
-                scope_terms.update([part, name, *restore_query_terms(name.replace("-", " "))])
-        topical_terms = [term for term in terms if term not in scope_terms]
-        relevance = sum(len(term) for term in topical_terms if term in text)
-        if scope_terms and terms and not topical_terms:
-            relevance = 1
-        if item["entity"].lower() in terms:
-            relevance += len(item["entity"])
+        text = restore_row_search_text(item, payload)
+        relevance, matched_topical, matched_identifiers, scope_term_match = restore_row_relevance(item, text, term_groups)
         global_instruction = item.get("scope", "").lower() == "global" and item["category"] in {CATEGORY_PREFERENCE, CATEGORY_PROFILE}
+        has_relevance_terms = bool(term_groups["topical"] or term_groups["identifiers"])
+        if term_groups["identifiers"] and not matched_identifiers:
+            continue
+        if has_relevance_terms and not matched_topical and not matched_identifiers and not scope_term_match and not global_instruction:
+            continue
         if not relevance and item["category"] not in broad_categories and not global_instruction:
             continue
         ranked.append((relevance, personal_restore_rank(item, keywords=terms, active_scopes=prompt_scopes(prompt)), item["id"], item))
@@ -2758,7 +2906,8 @@ def detect_restore_intent(prompt):
     return max(scored.items(), key=lambda item: item[1])[0]
 
 
-def build_restore_context(conn, prompt="", max_chars=3200, allow_auxiliary=True):
+def build_restore_context(conn, prompt="", max_chars=3200, allow_auxiliary=True, event_data=None):
+    prompt = restore_prompt_with_scope(prompt, event_data)
     intent = detect_restore_intent(prompt)
     lines = ["## CP Memory Context", f"Intent: {intent}"]
     rows = select_restore_records(conn, prompt=prompt, limit=12)

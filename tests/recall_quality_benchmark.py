@@ -25,6 +25,8 @@ def scenarios():
     release = record("atlas_release", "Atlas 发布必须先测试再合并。", scope="project:atlas")
     other = record("boreal_release", "Boreal 发布由专人执行。", scope="project:boreal", status="confirmed")
     language = record("language", "用户喜欢中文说明。", "preference")
+    # These pairs cover the follow-up precision boundaries without using live memory data.
+    # 这些成对数据覆盖后续精度边界，不使用真实记忆库内容。
     # Each pair varies phrasing or scope syntax; failures remain individually visible.
     # 每组两个问法独立计分，避免用单一固定问法掩盖边界。
     groups = [
@@ -51,6 +53,11 @@ def scenarios():
         ("inactive_summary", [record("dead_summary", "园艺历史记录内容。", "summary", status="wrong")], ["上次园艺说了什么？", "之前园艺讨论"], [], []),
         ("inactive_decision", [record("dead_decision", "园艺使用塑料盆。", "decision", status="stale")], ["园艺规则是什么？", "你记得园艺的决定吗？"], [], []),
         ("english", [record("coffee", "User prefers coffee without sugar.", "preference"), record("piano", "User prefers piano music.", "preference", status="confirmed")], ["What is my coffee preference?", "Remember coffee without sugar?"], ["coffee"], []),
+        ("numeric_collision", [record("cp_recall", "CP Memory 召回质量基线编号 144。"), record("other_build", "BasisProject 编译问题编号 111。", "summary")], ["召回质量 144 111", "CP Memory 召回质量基线"], ["cp_recall"], []),
+        ("generic_collision", [record("cp_quality", "CP Memory 召回质量改进。", scope="project:cp-memory"), record("other_quality", "BasisProject 质量问题记录。", "summary")], ["CP Memory 质量问题", "CP Memory 召回质量"], ["cp_quality"], []),
+        ("explicit_identifier", [record("release_190", "版本 v1.9.0 已完成召回修复。", "summary"), record("release_191", "版本 v1.9.1 仍在计划中。", "summary")], ["版本 v1.9.0", "v1.9.0"], ["release_190"], []),
+        ("unscoped_history", [record("garden_decision", "园艺讨论决定使用陶盆。", "episode"), record("music_decision", "音乐讨论决定选择钢琴。", "episode")], ["园艺讨论决定", "园艺之前的讨论"], ["garden_decision"], []),
+        ("no_result_topic", [record("known_topic", "已知主题的历史记录。", "summary")], ["完全不存在的主题", "另一个不存在的主题"], [], []),
         ("empty", [], ["你记得我的昵称吗？", "上次园艺说了什么？"], [], []),
     ]
     for name, records, prompts, required, allowed in groups:

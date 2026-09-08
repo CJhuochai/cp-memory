@@ -2,6 +2,14 @@
 
 ## 中文
 
+### v1.9.1 — 项目范围恢复修复
+
+- Stop Hook 现在会为会话摘要保存由显式问题或受限事件路径识别出的 `repo:`、`project:` 或 `workspace:` 范围。
+- SessionStart、UserPromptSubmit、恢复上下文与显式 MCP 查询复用范围解析；同一项目的新会话不会恢复另一项目已标记的摘要。
+- 显式问题中的项目范围优先于事件目录；个人偏好、关系和其他个人信号不会仅因当前目录被写入项目范围。
+- 不改变 MCP 工具参数或数据库格式，也不迁移、清理或重新标记已有记忆。范围不是权限或数据隔离机制。
+- 验证覆盖 Stop 写入、SessionStart 泛历史恢复、UserPromptSubmit 恢复、跨项目过滤、Windows 路径和 latest summary 旧范围清理。
+
 ### v1.9.0 — 第一轮召回质量
 
 - 增加 48 个脱敏回归场景和可复现的旧提交对比，接入跨平台 CI。
@@ -85,6 +93,14 @@
 - 降低实现说明、代码示例等内容被误提炼为长期记忆的概率。
 
 ## English
+
+### v1.9.1 — Project-scope restore fix
+
+- The Stop hook now stores a `repo:`, `project:`, or `workspace:` scope on conversation summaries when an explicit prompt or a restricted event path identifies it.
+- SessionStart, UserPromptSubmit, restore context, and explicit MCP recall share scope parsing, so a new session in one project does not restore a scoped summary from another.
+- An explicit project in the prompt takes precedence over the event directory. Preferences, relationships, and other personal signals are never scoped solely from the current directory.
+- MCP tool parameters and the database format remain unchanged; existing memories are not migrated, cleaned, or retroactively scoped. Scope is not authorization or data isolation.
+- Validation covers Stop writes, SessionStart broad-history restore, UserPromptSubmit restore, cross-project filtering, Windows paths, and clearing an old latest-summary scope.
 
 ### v1.9.0 — Round-one recall quality
 
